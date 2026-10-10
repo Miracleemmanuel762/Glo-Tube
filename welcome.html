@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Welcome to Glo-Tube</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0b1220, #111c35);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .welcome-box {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 45px 25px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      width: 75px;
+      height: 75px;
+      margin: 0 auto 25px;
+      border-radius: 20px;
+      background: #1877f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    h1 {
+      margin: 0 0 15px;
+      font-size: 30px;
+    }
+
+    .username {
+      color: #4da3ff;
+    }
+
+    .message {
+      color: #c8d1df;
+      font-size: 16px;
+      line-height: 1.7;
+      margin: 0 auto 30px;
+      max-width: 380px;
+    }
+
+    .success {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .enter-btn {
+      width: 100%;
+      max-width: 300px;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 12px;
+      background: #1877f2;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .enter-btn:hover {
+      background: #0d65d9;
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      color: #aeb9c8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="welcome-box">
+
+    <div class="logo">G</div>
+
+    <div class="success">🎉</div>
+
+    <h1>
+      Welcome to Glo-Tube,
+      <span class="username" id="username">...</span>!
+    </h1>
+
+    <p class="message">
+      Your account has been created successfully.
+      We're excited to have you join the Glo-Tube community.
+      Discover videos, share your creativity, and connect with others.
+    </p>
+
+    <button class="enter-btn" id="enterButton">
+      Enter Glo-Tube
+    </button>
+
+  </div>
+
+  <script>
+    async function loadWelcome() {
+
+      const {
+        data: { session },
+        error
+      } = await supabaseClient.auth.getSession();
+
+      if (error || !session) {
+        window.location.replace("login.html");
+        return;
+      }
+
+      const user = session.user;
+
+      const username =
+        user.user_metadata?.username ||
+        user.email?.split("@")[0] ||
+        "there";
+
+      document.getElementById("username").textContent = username;
+    }
+
+    document.getElementById("enterButton").addEventListener("click", function () {
+      window.location.replace("home.html");
+    });
+
+    loadWelcome();
+  </script>
+
+</body>
+
+    </html>
