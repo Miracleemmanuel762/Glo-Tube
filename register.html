@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Create Account | Glo-Tube</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      background: #ffffff;
+      padding: 35px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .logo {
+      text-align: center;
+      color: #e60000;
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 18px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #e60000;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #e60000;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .login {
+      text-align: center;
+      margin-top: 22px;
+      color: #666;
+    }
+
+    .login a {
+      color: #e60000;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="logo">
+      Glo-Tube
+    </div>
+
+    <p class="subtitle">
+      Create your account and join the community.
+    </p>
+
+    <form id="registerForm">
+
+      <label for="username">
+        Username
+      </label>
+
+      <input
+        type="text"
+        id="username"
+        placeholder="Choose a username"
+        required
+      >
+
+      <label for="email">
+        Email
+      </label>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter your email"
+        required
+      >
+
+      <label for="password">
+        Password
+      </label>
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Create a password"
+        minlength="6"
+        required
+      >
+
+      <button type="submit" id="registerButton">
+        Create Account
+      </button>
+
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="login">
+      Already have an account?
+      <a href="login.html">Login</a>
+    </div>
+
+  </div>
+
+
+  <script src="supabase.js"></script>
+
+  <script>
+
+    const registerForm = document.getElementById("registerForm");
+    const registerButton = document.getElementById("registerButton");
+    const message = document.getElementById("message");
+
+    registerForm.addEventListener("submit", async function(event) {
+
+      event.preventDefault();
+
+      const username =
+        document.getElementById("username").value.trim();
+
+      const email =
+        document.getElementById("email").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      if (!username || !email || !password) {
+        message.textContent = "Please fill in all fields.";
+        return;
+      }
+
+      registerButton.disabled = true;
+      registerButton.textContent = "Creating account...";
+      message.textContent = "";
+
+      const {
+        data,
+        error
+      } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            username: username
+          }
+        }
+      });
+
+      if (error) {
+
+        message.textContent = error.message;
+
+        registerButton.disabled = false;
+        registerButton.textContent = "Create Account";
+
+        return;
+      }
+
+      message.textContent =
+        "Account created successfully. Redirecting...";
+
+      setTimeout(function() {
+        window.location.href = "login.html";
+      }, 1500);
+
+    });
+
+  </script>
+
+</body>
+
+  </html>
