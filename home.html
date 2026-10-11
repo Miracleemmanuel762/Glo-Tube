@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Glo-Tube</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      color: #111;
+    }
+
+    /* HEADER */
+
+    header {
+      height: 65px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 18px;
+
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1877f2;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .upload-btn {
+      border: none;
+      background: #1877f2;
+      color: white;
+
+      padding: 9px 15px;
+
+      border-radius: 9px;
+
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .logout-btn {
+      border: none;
+      background: #eef2f7;
+      color: #222;
+
+      padding: 9px 12px;
+
+      border-radius: 9px;
+
+      cursor: pointer;
+    }
+
+    /* MAIN */
+
+    main {
+      width: 100%;
+      max-width: 700px;
+
+      margin: auto;
+
+      padding: 20px 15px 50px;
+    }
+
+    .welcome {
+      background: white;
+
+      border-radius: 15px;
+
+      padding: 20px;
+
+      margin-bottom: 20px;
+
+      border: 1px solid #e5e7eb;
+    }
+
+    .welcome h2 {
+      margin: 0 0 7px;
+      font-size: 21px;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: #667085;
+    }
+
+    /* VIDEO CARD */
+
+    .video-card {
+      background: white;
+
+      border-radius: 15px;
+
+      overflow: hidden;
+
+      margin-bottom: 22px;
+
+      border: 1px solid #e5e7eb;
+    }
+
+    .video-header {
+      padding: 15px;
+
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+
+      border-radius: 50%;
+
+      background: #1877f2;
+
+      color: white;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-weight: bold;
+    }
+
+    .creator {
+      font-weight: bold;
+    }
+
+    .video-date {
+      font-size: 12px;
+      color: #777;
+      margin-top: 3px;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+
+      max-height: 600px;
+
+      background: #000;
+    }
+
+    .video-content {
+      padding: 15px;
+    }
+
+    .caption {
+      margin: 0 0 15px;
+
+      line-height: 1.5;
+    }
+
+    .video-actions {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      border-top: 1px solid #eee;
+
+      padding-top: 12px;
+    }
+
+    .action-btn {
+      border: none;
+
+      background: #f1f3f5;
+
+      padding: 9px 13px;
+
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      font-size: 14px;
+    }
+
+    .views {
+      margin-left: auto;
+
+      color: #777;
+
+      font-size: 13px;
+    }
+
+    /* EMPTY STATE */
+
+    .empty {
+      background: white;
+
+      border-radius: 15px;
+
+      text-align: center;
+
+      padding: 50px 20px;
+
+      border: 1px solid #e5e7eb;
+    }
+
+    .empty-icon {
+      font-size: 45px;
+
+      margin-bottom: 10px;
+    }
+
+    .empty h3 {
+      margin: 0 0 8px;
+    }
+
+    .empty p {
+      margin: 0;
+
+      color: #667085;
+
+      line-height: 1.6;
+    }
+
+    .loading {
+      text-align: center;
+
+      padding: 40px;
+
+      color: #667085;
+    }
+
+    @media (max-width: 600px) {
+
+      header {
+        padding: 0 12px;
+      }
+
+      .logo {
+        font-size: 21px;
+      }
+
+      .upload-btn {
+        padding: 8px 10px;
+      }
+
+      .logout-btn {
+        padding: 8px 9px;
+      }
+
+      main {
+        padding: 15px 10px 40px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- HEADER -->
+
+  <header>
+
+    <div class="logo">
+      Glo-Tube
+    </div>
+
+    <div class="header-right">
+
+      <button
+        class="upload-btn"
+        id="uploadButton">
+
+        + Upload
+
+      </button>
+
+      <button
+        class="logout-btn"
+        id="logoutButton">
+
+        Logout
+
+      </button>
+
+    </div>
+
+  </header>
+
+
+
+  <!-- MAIN -->
+
+  <main>
+
+
+    <div class="welcome">
+
+      <h2>
+        Welcome back,
+        <span id="username">...</span> 👋
+      </h2>
+
+      <p>
+        Discover videos and connect with creators on Glo-Tube.
+      </p>
+
+    </div>
+
+
+    <div id="feed">
+
+      <div class="loading">
+        Loading videos...
+      </div>
+
+    </div>
+
+
+  </main>
+
+
+
+  <script>
+
+    let currentUser = null;
+
+
+    /* CHECK LOGIN */
+
+    async function checkUser() {
+
+      const {
+        data: { session },
+        error
+      } = await supabaseClient.auth.getSession();
+
+
+      if (error || !session) {
+
+        window.location.replace("login.html");
+
+        return;
+
+      }
+
+
+      currentUser = session.user;
+
+
+      const username =
+        currentUser.user_metadata?.username ||
+        currentUser.email?.split("@")[0] ||
+        "User";
+
+
+      document.getElementById("username")
+        .textContent = username;
+
+
+      loadVideos();
+
+    }
+
+
+
+    /* LOAD VIDEOS */
+
+    async function loadVideos() {
+
+      const feed =
+        document.getElementById("feed");
+
+
+      const {
+        data,
+        error
+      } = await supabaseClient
+
+        .from("videos")
+
+        .select("*")
+
+        .order("created_at", {
+          ascending: false
+        });
+
+
+      if (error) {
+
+        console.error(error);
+
+        feed.innerHTML = `
+          <div class="empty">
+
+            <div class="empty-icon">
+              ⚠️
+            </div>
+
+            <h3>
+              Couldn't load videos
+            </h3>
+
+            <p>
+              Something went wrong while loading the Glo-Tube feed.
+            </p>
+
+          </div>
+        `;
+
+        return;
+
+      }
+
+
+      if (!data || data.length === 0) {
+
+        feed.innerHTML = `
+          <div class="empty">
+
+            <div class="empty-icon">
+              🎬
+            </div>
+
+            <h3>
+              No videos yet
+            </h3>
+
+            <p>
+              Be the first person to share a video on Glo-Tube.
+            </p>
+
+          </div>
+        `;
+
+        return;
+
+      }
+
+
+      feed.innerHTML = "";
+
+
+      data.forEach(video => {
+
+        const card =
+          document.createElement("div");
+
+        card.className = "video-card";
+
+
+        card.innerHTML = `
+
+          <div class="video-header">
+
+            <div class="avatar">
+
+              ${getInitial(video.username)}
+
+            </div>
+
+            <div>
+
+              <div class="creator">
+
+                @${escapeHTML(video.username)}
+
+              </div>
+
+              <div class="video-date">
+
+                ${formatDate(video.created_at)}
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <video
+            controls
+            preload="metadata"
+            ${video.thumbnail_url
+              ? `poster="${escapeAttribute(video.thumbnail_url)}"`
+              : ""}>
+
+            <source
+              src="${escapeAttribute(video.video_url)}"
+              type="video/mp4">
+
+            Your browser does not support video playback.
+
+          </video>
+
+
+          <div class="video-content">
+
+            <p class="caption">
+
+              ${escapeHTML(video.caption || "")}
+
+            </p>
+
+
+            <div class="video-actions">
+
+              <button class="action-btn">
+
+                ❤️ Like
+
+              </button>
+
+              <button class="action-btn">
+
+                💬 Comment
+
+              </button>
+
+              <span class="views">
+
+                👁️ ${video.views || 0} views
+
+              </span>
+
+            </div>
+
+          </div>
+
+        `;
+
+
+        feed.appendChild(card);
+
+      });
+
+    }
+
+
+
+    /* GET INITIAL */
+
+    function getInitial(name) {
+
+      if (!name) return "G";
+
+      return name
+        .charAt(0)
+        .toUpperCase();
+
+    }
+
+
+
+    /* ESCAPE HTML */
+
+    function escapeHTML(value) {
+
+      const div =
+        document.createElement("div");
+
+      div.textContent = value || "";
+
+      return div.innerHTML;
+
+    }
+
+
+
+    function escapeAttribute(value) {
+
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    }
+
+
+
+    /* DATE */
+
+    function formatDate(date) {
+
+      if (!date) return "";
+
+      return new Date(date)
+        .toLocaleDateString();
+
+    }
+
+
+
+    /* LOGOUT */
+
+    document
+      .getElementById("logoutButton")
+      .addEventListener("click", async function () {
+
+        const {
+          error
+        } = await supabaseClient.auth.signOut();
+
+
+        if (error) {
+
+          alert("Unable to logout.");
+
+          return;
+
+        }
+
+
+        window.location.replace("index.html");
+
+      });
+
+
+
+    /* UPLOAD */
+
+    document
+      .getElementById("uploadButton")
+      .addEventListener("click", function () {
+
+        window.location.href =
+          "upload.html";
+
+      });
+
+
+
+    /* START */
+
+    checkUser();
+
+  </script>
+
+
+</body>
+
+  </html>
