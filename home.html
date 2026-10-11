@@ -22,7 +22,7 @@
     .logo{font-size:22px;font-weight:800;text-shadow:0 2px 8px #000;pointer-events:auto}.logo span{color:#39a0ff}
     .top-actions{display:flex;gap:8px;pointer-events:auto}.top-icon{width:40px;height:40px;border:0;border-radius:50%;background:#0008;color:#fff;cursor:pointer;backdrop-filter:blur(8px)}
     .video-info{position:absolute;z-index:5;left:15px;right:78px;bottom:88px;text-shadow:0 2px 5px #000}
-    .creator-row{display:flex;align-items:center;gap:9px;margin-bottom:9px}.creator-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#1877f2;font-weight:800;overflow:hidden}.creator-avatar img{width:100%;height:100%;object-fit:cover}.creator-name{font-weight:800;font-size:15px}.follow-mini{border:1px solid #fff;background:#0005;color:#fff;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer}
+    .creator-row{display:flex;align-items:center;gap:9px;margin-bottom:9px}.creator-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#1877f2;font-weight:800;overflow:hidden}.creator-avatar img{width:100%;height:100%;object-fit:cover}.creator-name{font-weight:800;font-size:15px; text-decoration:none;color:#fff;}.follow-mini{border:1px solid #fff;background:#0005;color:#fff;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer}
     .caption{margin:0;font-size:14px;line-height:1.4;max-width:560px}
     .side-actions{position:absolute;z-index:6;right:10px;bottom:82px;display:flex;flex-direction:column;align-items:center;gap:15px}.side-action{width:54px;min-height:54px;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;text-shadow:0 2px 5px #000}.action-icon{font-size:27px;line-height:1}.action-count{font-size:11px;font-weight:700}.like-button.liked .action-icon{transform:scale(1.12)}
     .progress-container{position:absolute;z-index:7;left:0;right:0;bottom:64px;height:2px;background:#ffffff40}.progress-bar{height:100%;width:0;background:#fff}
@@ -124,7 +124,7 @@ function renderVideos(){
       <video class="video-player" preload="metadata" playsinline loop ${video.thumbnail_url?`poster="${escapeAttribute(video.thumbnail_url)}"`:''} src="${escapeAttribute(video.video_url)}"></video>
       <div class="bottom-gradient"></div>
       <div class="play-indicator">▶</div><div class="big-heart">❤️</div>
-      <div class="video-info"><div class="creator-row"><div class="creator-avatar">${getInitial(video.username)}</div><div class="creator-name">@${escapeHTML(video.username||'creator')}</div><button class="follow-mini" type="button">Follow</button></div><p class="caption">${escapeHTML(video.caption||'')}</p></div>
+      <div class="video-info"><div class="creator-row"><div class="creator-avatar">${getInitial(video.username)}</div><a class="creator-name" href="creator.html?id=USER_ID">@${escapeHTML(video.username||'creator')}</a><button class="follow-mini" type="button">Follow</button></div><p class="caption">${escapeHTML(video.caption||'')}</p></div>
       <div class="side-actions">
         <button class="side-action like-button" type="button"><span class="action-icon">❤️</span><span class="action-count like-count">0</span></button>
         <button class="side-action comment-button" type="button"><span class="action-icon">💬</span><span class="action-count comment-count">0</span></button>
