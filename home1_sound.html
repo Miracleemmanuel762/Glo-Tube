@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Glo-Tube</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+    button{font:inherit}
+    .app{position:fixed;inset:0;background:#000}
+    #feed{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;scroll-behavior:auto;overscroll-behavior-y:contain;scrollbar-width:none;padding-bottom:0}
+    #feed::-webkit-scrollbar{display:none}
+    .video-item{position:relative;width:100%;height:100dvh;min-height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#000}
+    .video-player{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;cursor:pointer}
+    .top-gradient{position:absolute;z-index:2;inset:0 0 auto;height:180px;background:linear-gradient(#000b,transparent);pointer-events:none}
+    .bottom-gradient{position:absolute;z-index:2;inset:auto 0 0;height:280px;background:linear-gradient(transparent,#000d);pointer-events:none}
+    .top-bar{position:fixed;z-index:30;top:0;left:0;right:0;height:64px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+    .logo{font-size:22px;font-weight:800;text-shadow:0 2px 8px #000;pointer-events:auto}.logo span{color:#39a0ff}
+    .top-actions{display:flex;gap:8px;pointer-events:auto}.top-icon{width:40px;height:40px;border:0;border-radius:50%;background:#0008;color:#fff;cursor:pointer;backdrop-filter:blur(8px)}
+    .video-info{position:absolute;z-index:5;left:15px;right:78px;bottom:88px;text-shadow:0 2px 5px #000}
+    .creator-row{display:flex;align-items:center;gap:9px;margin-bottom:9px}.creator-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#1877f2;font-weight:800;overflow:hidden}.creator-avatar img{width:100%;height:100%;object-fit:cover}.creator-name{font-weight:800;font-size:15px}.follow-mini{border:1px solid #fff;background:#0005;color:#fff;border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer}
+    .caption{margin:0;font-size:14px;line-height:1.4;max-width:560px}
+    .side-actions{position:absolute;z-index:6;right:10px;bottom:82px;display:flex;flex-direction:column;align-items:center;gap:15px}.side-action{width:54px;min-height:54px;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;text-shadow:0 2px 5px #000}.action-icon{font-size:27px;line-height:1}.action-count{font-size:11px;font-weight:700}.like-button.liked .action-icon{transform:scale(1.12)}
+    .progress-container{position:absolute;z-index:7;left:0;right:0;bottom:64px;height:2px;background:#ffffff40}.progress-bar{height:100%;width:0;background:#fff}
+    .play-indicator,.big-heart{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0}.play-indicator{font-size:58px;background:#0008;border-radius:50%;padding:18px}.big-heart{font-size:90px;text-shadow:0 4px 20px #000;animation:heartPop .65s ease forwards}@keyframes heartPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}}
+    .bottom-nav{position:fixed;z-index:40;left:0;right:0;bottom:0;height:64px;padding:5px 6px calc(5px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);background:#050505f2;border-top:1px solid #ffffff18;backdrop-filter:blur(12px)}
+    .nav-item{border:0;background:transparent;color:#aaa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;text-decoration:none;font-size:10px}.nav-item.active{color:#fff}.nav-icon{font-size:20px;line-height:1}.upload-nav{width:40px;height:30px;border-radius:8px;background:#fff;color:#000;display:grid;place-items:center;font-size:25px;line-height:1}
+    .comment-overlay{position:fixed;z-index:100;inset:0;background:#0008;display:none;align-items:flex-end}.comment-overlay.show{display:flex}.comment-sheet{width:100%;max-height:78dvh;background:#fff;color:#111;border-radius:20px 20px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);overflow:hidden}.comment-header{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #eee}.comment-header h3{margin:0;font-size:16px}.close-comments{border:0;background:#eee;border-radius:50%;width:34px;height:34px;cursor:pointer}.comments-list{flex:1;overflow:auto;padding:10px 14px}.comment{display:flex;gap:10px;padding:10px 0}.comment-avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:#1877f2;color:#fff;display:grid;place-items:center;font-weight:700}.comment-body{min-width:0}.comment-user{font-weight:700;font-size:13px}.comment-text{font-size:14px;margin-top:3px;word-break:break-word}.comment-date{font-size:10px;color:#888;margin-top:4px}.no-comments{padding:35px 10px;text-align:center;color:#777}.comment-form{display:flex;gap:8px;padding:10px;border-top:1px solid #eee}.comment-input{flex:1;border:1px solid #ddd;outline:0;border-radius:22px;padding:11px 15px;font-size:14px}.comment-send{width:43px;height:43px;border:0;border-radius:50%;background:#1877f2;color:#fff;cursor:pointer}.empty,.error-state{height:100%;display:grid;place-items:center;text-align:center;padding:30px}.empty div,.error-state div{max-width:330px}.empty h2,.error-state h2{margin:0 0 8px}.empty p,.error-state p{color:#aaa;line-height:1.5}.empty button,.error-state button{border:0;background:#1877f2;color:#fff;padding:12px 20px;border-radius:10px;font-weight:700;cursor:pointer}
+    .toast{position:fixed;z-index:200;left:50%;bottom:80px;transform:translate(-50%,20px);background:#111e;color:#fff;padding:10px 15px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;max-width:90%;text-align:center;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(min-width:700px){.video-item{width:430px;margin:auto}.top-bar{width:430px;left:50%;right:auto;transform:translateX(-50%)}.bottom-nav{width:430px;left:50%;right:auto;transform:translateX(-50%);border-radius:15px 15px 0 0}.comment-sheet{width:430px;margin:auto;border-radius:20px 20px 0 0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top-bar">
+    <div class="logo">Glo-<span>Tube</span></div>
+    <div class="top-actions"><button class="top-icon" id="searchButton" aria-label="Search">🔍</button><button class="top-icon" id="menuButton" aria-label="Menu">⋮</button></div>
+  </header>
+
+  <main id="feed"></main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item active" href="home1.html"><span class="nav-icon">⌂</span><span>Home</span></a>
+    <a class="nav-item" href="discover.html"><span class="nav-icon">🔍</span><span>Discover</span></a>
+    <a class="nav-item" href="upload.html"><span class="upload-nav">+</span></a>
+    <a class="nav-item" href="notifications.html"><span class="nav-icon">🔔</span><span>Alerts</span></a>
+    <a class="nav-item" href="profile.html"><span class="nav-icon">👤</span><span>Profile</span></a>
+  </nav>
+
+  <div class="comment-overlay" id="commentOverlay">
+    <section class="comment-sheet">
+      <div class="comment-header"><h3>Comments</h3><button class="close-comments" id="closeComments">✕</button></div>
+      <div class="comments-list" id="commentsList"></div>
+      <form class="comment-form" id="commentForm"><input class="comment-input" id="commentInput" maxlength="500" autocomplete="off" placeholder="Add a comment..." required><button class="comment-send" type="submit">➤</button></form>
+    </section>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+let currentUser=null;
+let videos=[];
+let observer=null;
+let activeVideoId=null;
+let viewedVideos=new Set();
+let audioContext=null;
+let lastTap=0;
+let tapTimer=null;
+
+const feed=document.getElementById('feed');
+const toast=document.getElementById('toast');
+
+function showToast(message){toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),2200)}
+function escapeHTML(value=''){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function escapeAttribute(value=''){return escapeHTML(value)}
+function getInitial(name='User'){return escapeHTML(String(name).trim().charAt(0).toUpperCase()||'U')}
+function formatDate(value){if(!value)return '';return new Date(value).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}
+
+function playSound(type){
+  try{
+    audioContext ||= new (window.AudioContext||window.webkitAudioContext)();
+    if(audioContext.state==='suspended') audioContext.resume();
+    const now=audioContext.currentTime;
+    const osc=audioContext.createOscillator();
+    const gain=audioContext.createGain();
+    osc.connect(gain);gain.connect(audioContext.destination);
+    if(type==='like'){osc.type='sine';osc.frequency.setValueAtTime(520,now);osc.frequency.exponentialRampToValueAtTime(820,now+.09);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.16,now+.015);gain.gain.exponentialRampToValueAtTime(.0001,now+.18);osc.start(now);osc.stop(now+.19)}
+    else{osc.type='triangle';osc.frequency.setValueAtTime(620,now);osc.frequency.exponentialRampToValueAtTime(900,now+.07);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.12,now+.015);gain.gain.exponentialRampToValueAtTime(.0001,now+.14);osc.start(now);osc.stop(now+.15)}
+  }catch(e){}
+}
+
+async function loadCurrentUser(){try{const {data}=await supabaseClient.auth.getSession();currentUser=data?.session?.user||null;await ensureProfile()}catch(e){currentUser=null}}
+
+async function ensureProfile(){
+  if(!currentUser)return false;
+  const {data}=await supabaseClient.from('profiles').select('id').eq('id',currentUser.id).maybeSingle();
+  if(data)return true;
+  const username=currentUser.user_metadata?.username||currentUser.email?.split('@')[0]||'user';
+  const {error}=await supabaseClient.from('profiles').insert({id:currentUser.id,username,first_name:currentUser.user_metadata?.first_name||'',last_name:currentUser.user_metadata?.last_name||'',bio:'',profile_photo:'',cover_photo:''});
+  if(error && !String(error.message).toLowerCase().includes('duplicate')){console.warn('Profile creation:',error.message);return false}
+  return true;
+}
+
+async function requireUser(){if(!currentUser)await loadCurrentUser();if(!currentUser){showToast('Please log in to do that.');setTimeout(()=>location.href='login.html',450);return false}await ensureProfile();return true}
+
+async function loadVideos(){
+  const {data,error}=await supabaseClient.from('videos').select('*').order('created_at',{ascending:false});
+  if(error){console.error(error);feed.innerHTML=`<div class="error-state"><div><h2>Couldn’t load videos</h2><p>${escapeHTML(error.message)}</p><button onclick="location.reload()">Try again</button></div></div>`;return}
+  videos=data||[];
+  if(!videos.length){feed.innerHTML=`<div class="empty"><div><div style="font-size:55px">🎬</div><h2>No videos yet</h2><p>Be the first creator to share a video on Glo-Tube.</p><button onclick="location.href='upload.html'">Upload a Video</button></div></div>`;return}
+  renderVideos();setupVideoObserver();
+}
+
+function renderVideos(){
+  feed.innerHTML='';
+  videos.forEach(video=>{
+    const item=document.createElement('article');item.className='video-item';item.dataset.videoId=video.id;
+    item.innerHTML=`
+      <div class="top-gradient"></div>
+      <video class="video-player" preload="metadata" playsinline loop ${video.thumbnail_url?`poster="${escapeAttribute(video.thumbnail_url)}"`:''} src="${escapeAttribute(video.video_url)}"></video>
+      <div class="bottom-gradient"></div>
+      <div class="play-indicator">▶</div><div class="big-heart">❤️</div>
+      <div class="video-info"><div class="creator-row"><div class="creator-avatar">${getInitial(video.username)}</div><div class="creator-name">@${escapeHTML(video.username||'creator')}</div><button class="follow-mini" type="button">Follow</button></div><p class="caption">${escapeHTML(video.caption||'')}</p></div>
+      <div class="side-actions">
+        <button class="side-action like-button" type="button"><span class="action-icon">❤️</span><span class="action-count like-count">0</span></button>
+        <button class="side-action comment-button" type="button"><span class="action-icon">💬</span><span class="action-count comment-count">0</span></button>
+        <button class="side-action share-button" type="button"><span class="action-icon">↗️</span><span class="action-count">Share</span></button>
+        <button class="side-action mute-button" type="button"><span class="action-icon">🔇</span><span class="action-count">Sound</span></button>
+      </div>
+      <div class="progress-container"><div class="progress-bar"></div></div>`;
+    feed.appendChild(item);
+    const player=item.querySelector('.video-player');
+
+    item.querySelector('.like-button').addEventListener('click',()=>likeVideo(video.id,item));
+    item.querySelector('.comment-button').addEventListener('click',()=>openComments(video.id));
+    item.querySelector('.share-button').addEventListener('click',()=>shareVideo(video));
+    item.querySelector('.mute-button').addEventListener('click',()=>{player.muted=!player.muted;item.querySelector('.mute-button .action-icon').textContent=player.muted?'🔇':'🔊';if(!player.muted){player.play().catch(()=>{});}});
+    item.querySelector('.follow-mini').addEventListener('click',()=>followCreator(video,item));
+
+    player.addEventListener('click',()=>{
+      const now=Date.now();
+      if(now-lastTap<320){clearTimeout(tapTimer);lastTap=0;showHeart(item);likeVideo(video.id,item);return}
+      lastTap=now;
+      tapTimer=setTimeout(()=>{if(player.paused){player.play().catch(()=>{});showPlayIndicator(item,false)}else{player.pause();showPlayIndicator(item,true)}lastTap=0},330);
+    });
+    player.addEventListener('timeupdate',()=>{if(player.duration)item.querySelector('.progress-bar').style.width=((player.currentTime/player.duration)*100)+'%'});
+    player.addEventListener('ended',()=>{const next=item.nextElementSibling;if(next)feed.scrollTo({top:next.offsetTop,behavior:'smooth'})});
+    loadVideoStats(video.id,item);
+  });
+}
+
+async function loadVideoStats(videoId,item){
+  const likeCount=await getLikeCount(videoId);const commentCount=await getCommentCount(videoId);const liked=currentUser?await hasLiked(videoId):false;
+  item.querySelector('.like-count').textContent=likeCount;item.querySelector('.comment-count').textContent=commentCount;if(liked)item.querySelector('.like-button').classList.add('liked');
+}
+async function getLikeCount(id){const {count,error}=await supabaseClient.from('likes').select('id',{count:'exact',head:true}).eq('video_id',id);if(error){console.warn(error);return 0}return count||0}
+async function getCommentCount(id){const {count,error}=await supabaseClient.from('comments').select('id',{count:'exact',head:true}).eq('video_id',id);if(error){console.warn(error);return 0}return count||0}
+async function hasLiked(id){if(!currentUser)return false;const {data,error}=await supabaseClient.from('likes').select('id').eq('video_id',id).eq('user_id',currentUser.id).maybeSingle();if(error&&error.code!=='PGRST116')console.warn(error);return !!data}
+
+async function likeVideo(videoId,item){
+  if(!(await requireUser()))return;
+  const button=item.querySelector('.like-button');if(button.dataset.busy==='1')return;button.dataset.busy='1';
+  const liked=button.classList.contains('liked');
+  try{
+    if(liked){const {error}=await supabaseClient.from('likes').delete().eq('video_id',videoId).eq('user_id',currentUser.id);if(error)throw error;button.classList.remove('liked');item.querySelector('.like-count').textContent=Math.max(0,Number(item.querySelector('.like-count').textContent)-1)}
+    else{const {error}=await supabaseClient.from('likes').insert({video_id:videoId,user_id:currentUser.id});if(error && !String(error.message).toLowerCase().includes('duplicate'))throw error;if(!error){button.classList.add('liked');item.querySelector('.like-count').textContent=Number(item.querySelector('.like-count').textContent)+1;playSound('like')}}
+  }catch(e){console.error('Like error',e);showToast('Like could not be saved: '+e.message)}finally{button.dataset.busy='0'}
+}
+
+async function openComments(videoId){
+  activeVideoId=videoId;document.getElementById('commentOverlay').classList.add('show');document.querySelectorAll('.video-player').forEach(v=>v.pause());document.getElementById('commentsList').innerHTML='<div class="no-comments">Loading comments...</div>';await loadComments(videoId);document.getElementById('commentInput').focus();
+}
+async function loadComments(videoId){
+  const list=document.getElementById('commentsList');const {data,error}=await supabaseClient.from('comments').select('*').eq('video_id',videoId).order('created_at',{ascending:true});
+  if(error){list.innerHTML=`<div class="no-comments">Unable to load comments.<br><br>${escapeHTML(error.message)}</div>`;return}
+  if(!data?.length){list.innerHTML='<div class="no-comments">No comments yet.<br>Be the first to comment.</div>';updateCommentCount(videoId,0);return}
+  list.innerHTML='';data.forEach(c=>{const el=document.createElement('div');el.className='comment';el.innerHTML=`<div class="comment-avatar">${getInitial(c.username)}</div><div class="comment-body"><div class="comment-user">@${escapeHTML(c.username||'user')}</div><div class="comment-text">${escapeHTML(c.comment||'')}</div><div class="comment-date">${formatDate(c.created_at)}</div></div>`;list.appendChild(el)});updateCommentCount(videoId,data.length);list.scrollTop=list.scrollHeight;
+}
+
+document.getElementById('commentForm').addEventListener('submit',async e=>{
+  e.preventDefault();if(!(await requireUser())||!activeVideoId)return;const input=document.getElementById('commentInput');const text=input.value.trim();if(!text)return;const send=e.currentTarget.querySelector('.comment-send');send.disabled=true;send.textContent='…';
+  try{const username=currentUser.user_metadata?.username||currentUser.email?.split('@')[0]||'User';const {error}=await supabaseClient.from('comments').insert({video_id:activeVideoId,user_id:currentUser.id,username,comment:text});if(error)throw error;input.value='';playSound('comment');await loadComments(activeVideoId);showToast('Comment posted')}catch(err){console.error(err);showToast('Comment could not be saved: '+err.message)}finally{send.disabled=false;send.textContent='➤'}
+});
+function updateCommentCount(id,count){const item=document.querySelector(`.video-item[data-video-id="${CSS.escape(String(id))}"]`);if(item)item.querySelector('.comment-count').textContent=count}
+
+document.getElementById('closeComments').onclick=()=>{document.getElementById('commentOverlay').classList.remove('show');activeVideoId=null;resumeActiveVideo()};
+document.getElementById('commentOverlay').addEventListener('click',e=>{if(e.target.id==='commentOverlay'){document.getElementById('closeComments').click()}});
+
+async function shareVideo(video){const url=location.origin+location.pathname+'?video='+encodeURIComponent(video.id);try{if(navigator.share)await navigator.share({title:'Glo-Tube',text:video.caption||'Watch this video on Glo-Tube',url});else{await navigator.clipboard.writeText(url);showToast('Video link copied')}}catch(e){}
+}
+async function followCreator(video,item){if(!(await requireUser()))return;if(String(video.user_id)===String(currentUser.id)){showToast('You cannot follow yourself');return}const btn=item.querySelector('.follow-mini');const {data}=await supabaseClient.from('followers').select('id').eq('follower_id',currentUser.id).eq('following_id',video.user_id).maybeSingle();try{if(data){const {error}=await supabaseClient.from('followers').delete().eq('id',data.id);if(error)throw error;btn.textContent='Follow'}else{const {error}=await supabaseClient.from('followers').insert({follower_id:currentUser.id,following_id:video.user_id});if(error)throw error;btn.textContent='Following';playSound('comment')}}catch(e){showToast('Could not update follow: '+e.message)}}
+
+function showHeart(item){const heart=item.querySelector('.big-heart');heart.style.animation='none';void heart.offsetWidth;heart.style.animation='heartPop .65s ease forwards'}
+function showPlayIndicator(item,paused){const el=item.querySelector('.play-indicator');el.textContent=paused?'▶':'❚❚';el.style.opacity='1';clearTimeout(el.t);el.t=setTimeout(()=>el.style.opacity='0',500)}
+function resumeActiveVideo(){const item=document.querySelector('.video-item[data-video-id="'+CSS.escape(String(activeVideoId||''))+'"]');if(item)item.querySelector('video').play().catch(()=>{})}
+
+function setupVideoObserver(){
+  if(observer)observer.disconnect();
+  observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{if(entry.isIntersecting&&entry.intersectionRatio>=0.65){const item=entry.target;const player=item.querySelector('.video-player');activeVideoId=item.dataset.videoId;document.querySelectorAll('.video-player').forEach(v=>{if(v!==player)v.pause()});player.muted=true;player.play().catch(()=>{});countView(activeVideoId)}})
+  },{root:feed,threshold:[0.65,.9]});
+  document.querySelectorAll('.video-item').forEach(item=>observer.observe(item));
+  setTimeout(()=>{const first=document.querySelector('.video-item');if(first){const p=first.querySelector('video');p.muted=true;p.play().catch(()=>{})}},100);
+}
+async function countView(id){if(viewedVideos.has(String(id)))return;viewedVideos.add(String(id));const video=videos.find(v=>String(v.id)===String(id));if(!video)return;const newViews=Number(video.views||0)+1;const {error}=await supabaseClient.from('videos').update({views:newViews}).eq('id',id);if(!error)video.views=newViews}
+
+// Real links: search, menu, profile, discover, notifications and upload.
+document.getElementById('searchButton').onclick=()=>location.href='search.html';
+document.getElementById('menuButton').onclick=async()=>{if(confirm('Log out of Glo-Tube?')){await supabaseClient.auth.signOut();location.href='index.html'}};
+
+// Start the page immediately. Authentication is loaded in parallel, never used as a page-blocking loader.
+loadVideos();
+loadCurrentUser();
+</script>
+</body>
+</html>
