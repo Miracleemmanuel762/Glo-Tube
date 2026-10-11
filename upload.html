@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>Upload Video - Glo-Tube</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+
+      font-family: Arial, sans-serif;
+
+      background: #f5f7fa;
+      color: #111;
+    }
+
+
+    header {
+      height: 65px;
+
+      background: white;
+
+      border-bottom: 1px solid #e5e7eb;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 18px;
+    }
+
+
+    .logo {
+      color: #1877f2;
+
+      font-size: 24px;
+
+      font-weight: bold;
+    }
+
+
+    .back-btn {
+      border: none;
+
+      background: #eef2f7;
+
+      padding: 9px 14px;
+
+      border-radius: 9px;
+
+      cursor: pointer;
+    }
+
+
+    main {
+      width: 100%;
+
+      max-width: 650px;
+
+      margin: 35px auto;
+
+      padding: 0 15px;
+    }
+
+
+    .upload-box {
+      background: white;
+
+      border: 1px solid #e5e7eb;
+
+      border-radius: 18px;
+
+      padding: 25px;
+
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    }
+
+
+    h1 {
+      margin-top: 0;
+
+      font-size: 25px;
+    }
+
+
+    .subtitle {
+      color: #667085;
+
+      line-height: 1.6;
+
+      margin-bottom: 25px;
+    }
+
+
+    label {
+      display: block;
+
+      font-weight: bold;
+
+      margin-bottom: 8px;
+    }
+
+
+    input[type="file"] {
+      width: 100%;
+
+      padding: 12px;
+
+      border: 1px solid #d0d5dd;
+
+      border-radius: 10px;
+
+      background: #fff;
+    }
+
+
+    textarea {
+      width: 100%;
+
+      min-height: 120px;
+
+      resize: vertical;
+
+      padding: 13px;
+
+      border: 1px solid #d0d5dd;
+
+      border-radius: 10px;
+
+      font-family: inherit;
+
+      font-size: 15px;
+
+      outline: none;
+    }
+
+
+    textarea:focus {
+      border-color: #1877f2;
+    }
+
+
+    .field {
+      margin-bottom: 22px;
+    }
+
+
+    .preview {
+      display: none;
+
+      margin-top: 15px;
+
+      border-radius: 12px;
+
+      overflow: hidden;
+
+      background: #000;
+    }
+
+
+    .preview video {
+      width: 100%;
+
+      max-height: 400px;
+
+      display: block;
+    }
+
+
+    .upload-main-btn {
+      width: 100%;
+
+      padding: 15px;
+
+      border: none;
+
+      border-radius: 11px;
+
+      background: #1877f2;
+
+      color: white;
+
+      font-size: 16px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+    }
+
+
+    .upload-main-btn:disabled {
+      background: #9bbce9;
+
+      cursor: not-allowed;
+    }
+
+
+    .status {
+      margin-top: 18px;
+
+      text-align: center;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+    }
+
+
+    .progress-container {
+      display: none;
+
+      margin-top: 15px;
+    }
+
+
+    .progress-bar {
+      width: 100%;
+
+      height: 8px;
+
+      background: #e5e7eb;
+
+      border-radius: 20px;
+
+      overflow: hidden;
+    }
+
+
+    .progress {
+      width: 0%;
+
+      height: 100%;
+
+      background: #1877f2;
+
+      transition: width 0.2s;
+    }
+
+
+    @media (max-width: 600px) {
+
+      main {
+        margin-top: 20px;
+      }
+
+      .upload-box {
+        padding: 20px;
+      }
+
+      .logo {
+        font-size: 21px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <header>
+
+    <div class="logo">
+      Glo-Tube
+    </div>
+
+
+    <button
+      class="back-btn"
+      id="backButton">
+
+      ← Back
+
+    </button>
+
+  </header>
+
+
+
+  <main>
+
+    <div class="upload-box">
+
+      <h1>
+        Upload a Video 🎬
+      </h1>
+
+
+      <p class="subtitle">
+
+        Share your creativity with the Glo-Tube community.
+        Select a video, add a caption, and publish it.
+
+      </p>
+
+
+      <div class="field">
+
+        <label for="videoFile">
+          Select Video
+        </label>
+
+        <input
+          type="file"
+          id="videoFile"
+          accept="video/*">
+
+        <div
+          class="preview"
+          id="preview">
+
+          <video
+            id="previewVideo"
+            controls>
+          </video>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="field">
+
+        <label for="caption">
+          Caption
+        </label>
+
+        <textarea
+          id="caption"
+          maxlength="500"
+          placeholder="What do you want to say about this video?">
+        </textarea>
+
+      </div>
+
+
+
+      <button
+        class="upload-main-btn"
+        id="uploadButton">
+
+        Upload Video
+
+      </button>
+
+
+      <div
+        class="progress-container"
+        id="progressContainer">
+
+        <div class="progress-bar">
+
+          <div
+            class="progress"
+            id="progress">
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="status"
+        id="status">
+      </div>
+
+    </div>
+
+  </main>
+
+
+
+  <script>
+
+    let currentUser = null;
+
+    let selectedFile = null;
+
+
+
+    /* CHECK USER */
+
+    async function checkUser() {
+
+      const {
+        data: { session },
+        error
+      } = await supabaseClient.auth.getSession();
+
+
+      if (error || !session) {
+
+        window.location.replace("login.html");
+
+        return;
+
+      }
+
+
+      currentUser = session.user;
+
+    }
+
+
+
+    /* SELECT VIDEO */
+
+    document
+      .getElementById("videoFile")
+      .addEventListener("change", function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+          return;
+        }
+
+
+        if (!file.type.startsWith("video/")) {
+
+          alert("Please select a video file.");
+
+          this.value = "";
+
+          return;
+
+        }
+
+
+        selectedFile = file;
+
+
+        const video =
+          document.getElementById("previewVideo");
+
+        const preview =
+          document.getElementById("preview");
+
+
+        video.src =
+          URL.createObjectURL(file);
+
+        preview.style.display = "block";
+
+      });
+
+
+
+    /* UPLOAD */
+
+    document
+      .getElementById("uploadButton")
+      .addEventListener("click", uploadVideo);
+
+
+
+    async function uploadVideo() {
+
+      if (!currentUser) {
+
+        alert("Please log in first.");
+
+        return;
+
+      }
+
+
+      if (!selectedFile) {
+
+        alert("Please select a video first.");
+
+        return;
+
+      }
+
+
+      const caption =
+        document
+          .getElementById("caption")
+          .value
+          .trim();
+
+
+      const button =
+        document.getElementById("uploadButton");
+
+
+      const status =
+        document.getElementById("status");
+
+
+      const progressContainer =
+        document.getElementById("progressContainer");
+
+
+      const progress =
+        document.getElementById("progress");
+
+
+      button.disabled = true;
+
+      button.textContent = "Uploading...";
+
+      progressContainer.style.display = "block";
+
+      progress.style.width = "20%";
+
+      status.textContent =
+        "Uploading your video to Cloudinary...";
+
+
+      try {
+
+
+        /* CLOUDINARY */
+
+        const cloudinaryURL =
+          "https://api.cloudinary.com/v1_1/dg9qaek0h/video/upload";
+
+
+        const formData =
+          new FormData();
+
+
+        formData.append(
+          "file",
+          selectedFile
+        );
+
+
+        formData.append(
+          "upload_preset",
+          "glotube_uploads"
+        );
+
+
+        progress.style.width = "45%";
+
+
+        const cloudinaryResponse =
+          await fetch(
+            cloudinaryURL,
+            {
+              method: "POST",
+              body: formData
+            }
+          );
+
+
+        if (!cloudinaryResponse.ok) {
+
+          throw new Error(
+            "Cloudinary upload failed."
+          );
+
+        }
+
+
+        const cloudinaryData =
+          await cloudinaryResponse.json();
+
+
+        const videoURL =
+          cloudinaryData.secure_url;
+
+
+        progress.style.width = "75%";
+
+
+        status.textContent =
+          "Saving your video...";
+
+
+        /* USERNAME */
+
+        const username =
+          currentUser.user_metadata?.username ||
+          currentUser.email?.split("@")[0] ||
+          "User";
+
+
+        /* SUPABASE */
+
+        const {
+          error
+        } = await supabaseClient
+          .from("videos")
+          .insert({
+
+            user_id: currentUser.id,
+
+            username: username,
+
+            video_url: videoURL,
+
+            caption: caption,
+
+            views: 0
+
+          });
+
+
+        if (error) {
+
+          console.error(error);
+
+          throw new Error(
+            error.message
+          );
+
+        }
+
+
+        progress.style.width = "100%";
+
+        status.textContent =
+          "🎉 Video uploaded successfully!";
+
+
+        button.textContent =
+          "Uploaded ✓";
+
+
+        setTimeout(function () {
+
+          window.location.replace(
+            "home.html"
+          );
+
+        }, 1200);
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        status.textContent =
+          "❌ " + error.message;
+
+
+        button.disabled = false;
+
+        button.textContent =
+          "Upload Video";
+
+
+        progressContainer.style.display =
+          "none";
+
+      }
+
+    }
+
+
+
+    /* BACK */
+
+    document
+      .getElementById("backButton")
+      .addEventListener("click", function () {
+
+        window.location.replace(
+          "home.html"
+        );
+
+      });
+
+
+
+    /* START */
+
+    checkUser();
+
+  </script>
+
+
+</body>
+
+  </html>
