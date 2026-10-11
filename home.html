@@ -494,35 +494,6 @@
       cursor: pointer;
     }
 
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .loading-logo {
-      font-size: 29px;
-      font-weight: 800;
-    }
-
-    .spinner {
-      width: 35px;
-      height: 35px;
-      border: 3px solid #444;
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
 
     .empty {
       height: 100vh;
@@ -588,18 +559,6 @@
 
 <div class="app">
 
-  <div class="loading-screen" id="loadingScreen">
-    <div class="loading-logo">
-      Glo-<span>Tube</span>
-    </div>
-    <div class="spinner"></div>
-  </div>
-
-  <header class="top-bar">
-
-    <div class="logo">
-      Glo-<span>Tube</span>
-    </div>
 
     <div class="top-actions">
 
