@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Discover • Glo-Tube</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:#f7f8fa;color:#111827;font-family:Arial,sans-serif}
+    body{min-height:100vh;padding-bottom:82px}
+    button,input{font:inherit}
+
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid #e5e7eb;
+      padding:14px 16px 12px;
+    }
+    .top-row{
+      max-width:760px;margin:auto;
+      display:flex;align-items:center;gap:12px;
+    }
+    .brand{
+      text-decoration:none;color:#111827;
+      font-size:20px;font-weight:900;letter-spacing:-.7px;
+      white-space:nowrap;
+    }
+    .brand span{color:#3b9cff}
+    .search-wrap{flex:1;position:relative}
+    .search-icon{
+      position:absolute;left:14px;top:50%;
+      transform:translateY(-50%);
+      color:#6b7280;font-size:18px;pointer-events:none;
+    }
+    #searchInput{
+      width:100%;height:44px;
+      border:1px solid #e5e7eb;
+      background:#f3f4f6;
+      border-radius:24px;
+      outline:none;
+      padding:0 42px 0 42px;
+      font-size:15px;
+      transition:.2s;
+    }
+    #searchInput:focus{
+      background:#fff;border-color:#3b9cff;
+      box-shadow:0 0 0 3px rgba(59,156,255,.12);
+    }
+    .clear-btn{
+      position:absolute;right:8px;top:50%;
+      transform:translateY(-50%);
+      width:30px;height:30px;border:0;
+      border-radius:50%;background:#e5e7eb;
+      color:#374151;display:none;cursor:pointer;
+    }
+
+    .page{max-width:760px;margin:auto;padding:18px 14px}
+    .title-row{display:flex;align-items:end;justify-content:space-between;gap:12px}
+    h1{margin:0;font-size:27px;letter-spacing:-.8px}
+    .subtitle{margin:6px 0 18px;color:#6b7280;font-size:13px}
+
+    .tabs{
+      display:flex;gap:7px;overflow:auto;
+      padding-bottom:12px;
+      scrollbar-width:none;
+    }
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{
+      flex:0 0 auto;border:1px solid #e5e7eb;
+      background:#fff;color:#4b5563;
+      padding:9px 15px;border-radius:20px;
+      font-size:13px;font-weight:800;cursor:pointer;
+    }
+    .tab.active{background:#111827;color:#fff;border-color:#111827}
+
+    .section{margin-top:6px}
+    .section-head{
+      display:flex;align-items:center;justify-content:space-between;
+      margin:12px 2px 10px;
+    }
+    .section-head h2{margin:0;font-size:16px}
+    .count{font-size:12px;color:#6b7280}
+
+    .users{display:grid;gap:8px}
+    .user-card{
+      display:flex;align-items:center;gap:12px;
+      background:#fff;border:1px solid #e8eaee;
+      border-radius:16px;padding:11px 12px;
+      text-decoration:none;color:inherit;
+      transition:.15s;
+    }
+    .user-card:active{transform:scale(.99)}
+    .avatar{
+      width:50px;height:50px;border-radius:50%;
+      object-fit:cover;flex:none;background:#1877f2;
+      color:#fff;display:grid;place-items:center;
+      font-weight:900;font-size:18px;
+    }
+    .user-info{min-width:0;flex:1}
+    .user-name{
+      font-size:15px;font-weight:900;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .user-handle{
+      color:#6b7280;font-size:12px;margin-top:3px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .user-bio{
+      color:#9ca3af;font-size:12px;margin-top:4px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .open-arrow{font-size:20px;color:#9ca3af}
+
+    .video-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:6px;
+    }
+    .video-card{
+      position:relative;
+      aspect-ratio:9/14;
+      border-radius:12px;overflow:hidden;
+      background:#111827;cursor:pointer;
+      border:0;padding:0;
+    }
+    .video-thumb,.video-card video{
+      width:100%;height:100%;display:block;
+      object-fit:cover;
+    }
+    .video-gradient{
+      position:absolute;inset:35% 0 0;
+      background:linear-gradient(transparent,rgba(0,0,0,.82));
+      pointer-events:none;
+    }
+    .video-info{
+      position:absolute;left:9px;right:9px;bottom:9px;
+      color:#fff;text-align:left;z-index:2;
+    }
+    .video-user{
+      font-size:11px;font-weight:900;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .video-caption{
+      margin-top:4px;font-size:11px;line-height:1.25;
+      display:-webkit-box;-webkit-line-clamp:2;
+      -webkit-box-orient:vertical;overflow:hidden;
+      opacity:.94;
+    }
+    .play-badge{
+      position:absolute;top:9px;right:9px;
+      width:30px;height:30px;border-radius:50%;
+      background:rgba(0,0,0,.55);color:#fff;
+      display:grid;place-items:center;font-size:12px;
+    }
+    .views{
+      margin-top:4px;font-size:10px;color:#d1d5db;
+    }
+
+    .empty,.loading,.error{
+      background:#fff;border:1px solid #e8eaee;
+      border-radius:18px;padding:38px 18px;
+      text-align:center;color:#6b7280;
+    }
+    .empty-icon{font-size:36px;margin-bottom:10px}
+    .empty h3,.error h3{margin:0 0 7px;color:#111827}
+    .empty p,.error p{margin:0;font-size:13px;line-height:1.5}
+    .loading{color:#9ca3af}
+
+    .bottom-nav{
+      position:fixed;left:0;right:0;bottom:0;z-index:60;
+      background:rgba(255,255,255,.97);
+      backdrop-filter:blur(18px);
+      border-top:1px solid #e5e7eb;
+      padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    }
+    .nav-inner{
+      max-width:520px;margin:auto;
+      display:grid;grid-template-columns:repeat(5,1fr);
+      gap:4px;
+    }
+    .nav-item{
+      min-height:54px;text-decoration:none;color:#6b7280;
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:4px;border-radius:12px;
+      font-size:10px;font-weight:800;
+    }
+    .nav-item b{font-size:21px;line-height:1}
+    .nav-item.active{color:#111827;background:#f3f4f6}
+
+    .modal{
+      position:fixed;inset:0;z-index:100;
+      background:rgba(0,0,0,.72);
+      display:none;align-items:center;justify-content:center;
+      padding:18px;
+    }
+    .modal.show{display:flex}
+    .modal-box{
+      width:min(520px,100%);
+      max-height:88vh;background:#111827;
+      border-radius:20px;overflow:hidden;position:relative;
+    }
+    .modal-video{
+      width:100%;height:72vh;max-height:700px;
+      display:block;object-fit:contain;background:#000;
+    }
+    .modal-close{
+      position:absolute;top:10px;right:10px;
+      z-index:2;width:38px;height:38px;border:0;
+      border-radius:50%;background:rgba(0,0,0,.65);
+      color:#fff;font-size:20px;cursor:pointer;
+    }
+    .modal-caption{padding:12px 15px;color:#fff;font-size:13px}
+    .modal-caption strong{display:block;margin-bottom:4px}
+
+    @media(max-width:420px){
+      .brand{font-size:18px}
+      .top-row{gap:8px}
+      .page{padding-inline:10px}
+      .video-grid{gap:4px}
+      .video-card{border-radius:8px}
+      .video-info{left:7px;right:7px;bottom:7px}
+    }
+    @media(min-width:760px){
+      .bottom-nav{left:50%;right:auto;width:760px;transform:translateX(-50%);border-radius:18px 18px 0 0}
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="top-row">
+    <a class="brand" href="home.html">Glo<span>-Tube</span></a>
+
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search videos, creators..."
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="clear-btn" id="clearSearch" type="button">✕</button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="title-row">
+    <div>
+      <h1 id="pageTitle">Discover</h1>
+      <p class="subtitle" id="pageSubtitle">
+        Find creators and videos on Glo-Tube.
+      </p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-filter="all" type="button">All</button>
+    <button class="tab" data-filter="users" type="button">Users</button>
+    <button class="tab" data-filter="videos" type="button">Videos</button>
+  </div>
+
+  <section class="section" id="usersSection">
+    <div class="section-head">
+      <h2>Creators</h2>
+      <span class="count" id="usersCount"></span>
+    </div>
+    <div id="usersResults" class="users"></div>
+  </section>
+
+  <section class="section" id="videosSection">
+    <div class="section-head">
+      <h2>Videos</h2>
+      <span class="count" id="videosCount"></span>
+    </div>
+    <div id="videosResults" class="video-grid"></div>
+  </section>
+
+</main>
+
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <a class="nav-item" href="home.html"><b>⌂</b><span>Home</span></a>
+    <a class="nav-item active" href="discover.html"><b>⌕</b><span>Discover</span></a>
+    <a class="nav-item" href="upload.html"><b>＋</b><span>Upload</span></a>
+    <a class="nav-item" href="notifications.html"><b>♡</b><span>Alerts</span></a>
+    <a class="nav-item" href="profile.html"><b>◯</b><span>Profile</span></a>
+  </div>
+</nav>
+
+<div class="modal" id="videoModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeVideo" type="button">✕</button>
+    <video class="modal-video" id="modalVideo" controls playsinline></video>
+    <div class="modal-caption" id="modalCaption"></div>
+  </div>
+</div>
+
+<script>
+  let searchTimer = null;
+  let currentFilter = "all";
+  let currentQuery = "";
+
+  const $ = id => document.getElementById(id);
+
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeAttribute(value) {
+    return escapeHTML(value);
+  }
+
+  function initial(value) {
+    const text = String(value || "U").trim();
+    return text ? text.charAt(0).toUpperCase() : "U";
+  }
+
+  function formatNumber(value) {
+    const n = Number(value || 0);
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+    if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+    return n.toLocaleString();
+  }
+
+  function showLoading() {
+    $("usersResults").innerHTML =
+      '<div class="loading">Searching creators...</div>';
+    $("videosResults").innerHTML =
+      '<div class="loading">Searching videos...</div>';
+  }
+
+  function showInitialState() {
+    $("usersResults").innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">⌕</div>
+        <h3>Search Glo-Tube</h3>
+        <p>Search for a username, creator name, caption, or anything in a video.</p>
+      </div>
+    `;
+
+    $("videosResults").innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">▶</div>
+        <h3>Discover videos</h3>
+        <p>Type something above to find videos and creators.</p>
+      </div>
+    `;
+
+    $("usersCount").textContent = "";
+    $("videosCount").textContent = "";
+  }
+
+  function showNoResults(query) {
+    $("usersResults").innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">😕</div>
+        <h3>No creators found</h3>
+        <p>No creator matched “${escapeHTML(query)}”.</p>
+      </div>
+    `;
+
+    $("videosResults").innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🎬</div>
+        <h3>No videos found</h3>
+        <p>No video matched “${escapeHTML(query)}”.</p>
+      </div>
+    `;
+  }
+
+  async function checkAuth() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (!data.session) {
+      location.replace("login.html");
+      return;
+    }
+  }
+
+  async function searchGloTube(query) {
+    const q = query.trim();
+
+    if (!q) {
+      showInitialState();
+      return;
+    }
+
+    showLoading();
+
+    try {
+      const pattern = "%" + q.replace(/[%_]/g, "\\$&") + "%";
+
+      let users = [];
+      let videos = [];
+
+      if (currentFilter === "all" || currentFilter === "users") {
+        const userResult = await supabaseClient
+          .from("profiles")
+          .select("id, username, first_name, last_name, bio, profile_photo")
+          .or(
+            `username.ilike.${pattern},first_name.ilike.${pattern},last_name.ilike.${pattern},bio.ilike.${pattern}`
+          )
+          .limit(30);
+
+        if (userResult.error) throw userResult.error;
+        users = userResult.data || [];
+      }
+
+      if (currentFilter === "all" || currentFilter === "videos") {
+        const videoResult = await supabaseClient
+          .from("videos")
+          .select(`
+            id,
+            user_id,
+            username,
+            video_url,
+            thumbnail_url,
+            caption,
+            views,
+            created_at,
+            profiles:user_id (
+              username,
+              first_name,
+              last_name,
+              profile_photo
+            )
+          `)
+          .or(
+            `caption.ilike.${pattern},username.ilike.${pattern}`
+          )
+          .order("created_at", { ascending: false })
+          .limit(60);
+
+        if (videoResult.error) throw videoResult.error;
+        videos = videoResult.data || [];
+      }
+
+      renderUsers(users, q);
+      renderVideos(videos, q);
+
+      if (!users.length && !videos.length) {
+        showNoResults(q);
+      }
+
+      $("pageTitle").textContent = q ? `Results for “${q}”` : "Discover";
+      $("pageSubtitle").textContent =
+        `${users.length} creator${users.length === 1 ? "" : "s"} · ` +
+        `${videos.length} video${videos.length === 1 ? "" : "s"}`;
+
+    } catch (error) {
+      console.error("Search error:", error);
+
+      $("usersResults").innerHTML = `
+        <div class="error">
+          <h3>Search failed</h3>
+          <p>${escapeHTML(error.message || "Unable to search Glo-Tube.")}</p>
+        </div>
+      `;
+
+      $("videosResults").innerHTML = "";
+    }
+  }
+
+  function renderUsers(users, query) {
+    const section = $("usersSection");
+
+    if (currentFilter === "videos") {
+      section.style.display = "none";
+      $("usersCount").textContent = "";
+      return;
+    }
+
+    section.style.display = "";
+    $("usersCount").textContent = users.length
+      ? `${users.length} found`
+      : "";
+
+    if (!users.length) {
+      $("usersResults").innerHTML = `
+        <div class="empty">
+          <h3>No creators found</h3>
+          <p>Try another username or creator name.</p>
+        </div>
+      `;
+      return;
+    }
+
+    $("usersResults").innerHTML = users.map(user => {
+      const fullName =
+        [user.first_name, user.last_name]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || user.username || "Glo-Tube User";
+
+      const username = user.username || "user";
+
+      return `
+        <a class="user-card"
+           href="creator.html?id=${encodeURIComponent(user.id)}">
+
+          ${
+            user.profile_photo
+              ? `<img class="avatar"
+                       src="${escapeAttribute(user.profile_photo)}"
+                       alt="${escapeAttribute(fullName)}"
+                       loading="lazy">`
+              : `<div class="avatar">${escapeHTML(initial(username))}</div>`
+          }
+
+          <div class="user-info">
+            <div class="user-name">${escapeHTML(fullName)}</div>
+            <div class="user-handle">@${escapeHTML(username)}</div>
+            ${
+              user.bio
+                ? `<div class="user-bio">${escapeHTML(user.bio)}</div>`
+                : ""
+            }
+          </div>
+
+          <div class="open-arrow">›</div>
+        </a>
+      `;
+    }).join("");
+  }
+
+  function renderVideos(videos, query) {
+    const section = $("videosSection");
+
+    if (currentFilter === "users") {
+      section.style.display = "none";
+      $("videosCount").textContent = "";
+      return;
+    }
+
+    section.style.display = "";
+    $("videosCount").textContent = videos.length
+      ? `${videos.length} found`
+      : "";
+
+    if (!videos.length) {
+      $("videosResults").innerHTML = `
+        <div class="empty">
+          <h3>No videos found</h3>
+          <p>Try a different word or creator username.</p>
+        </div>
+      `;
+      return;
+    }
+
+    $("videosResults").innerHTML = videos.map(video => {
+      const profile = video.profiles || {};
+      const username =
+        video.username ||
+        profile.username ||
+        "creator";
+
+      const caption = video.caption || "";
+
+      return `
+        <button
+          class="video-card"
+          type="button"
+          data-video-url="${escapeAttribute(video.video_url || "")}"
+          data-username="${escapeAttribute(username)}"
+          data-caption="${escapeAttribute(caption)}">
+
+          ${
+            video.thumbnail_url
+              ? `<img class="video-thumb"
+                       src="${escapeAttribute(video.thumbnail_url)}"
+                       alt=""
+                       loading="lazy">`
+              : `<video
+                   src="${escapeAttribute(video.video_url || "")}"
+                   preload="metadata"
+                   muted
+                   playsinline></video>`
+          }
+
+          <div class="video-gradient"></div>
+          <div class="play-badge">▶</div>
+
+          <div class="video-info">
+            <div class="video-user">@${escapeHTML(username)}</div>
+            ${
+              caption
+                ? `<div class="video-caption">${escapeHTML(caption)}</div>`
+                : ""
+            }
+            <div class="views">${formatNumber(video.views)} views</div>
+          </div>
+        </button>
+      `;
+    }).join("");
+
+    document.querySelectorAll(".video-card").forEach(card => {
+      card.addEventListener("click", function() {
+        openVideo(
+          this.dataset.videoUrl,
+          this.dataset.username,
+          this.dataset.caption
+        );
+      });
+    });
+  }
+
+  function openVideo(url, username, caption) {
+    if (!url) return;
+
+    $("modalVideo").src = url;
+    $("modalCaption").innerHTML = `
+      <strong>@${escapeHTML(username || "creator")}</strong>
+      ${caption ? escapeHTML(caption) : "Watch this video on Glo-Tube."}
+    `;
+
+    $("videoModal").classList.add("show");
+
+    $("modalVideo").play().catch(() => {});
+  }
+
+  function closeVideo() {
+    const video = $("modalVideo");
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    $("videoModal").classList.remove("show");
+  }
+
+  $("searchInput").addEventListener("input", function() {
+    const value = this.value.trim();
+
+    $("clearSearch").style.display = value ? "block" : "none";
+
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(function() {
+      currentQuery = value;
+      searchGloTube(value);
+    }, 300);
+  });
+
+  $("clearSearch").addEventListener("click", function() {
+    $("searchInput").value = "";
+    $("clearSearch").style.display = "none";
+    currentQuery = "";
+    $("pageTitle").textContent = "Discover";
+    $("pageSubtitle").textContent =
+      "Find creators and videos on Glo-Tube.";
+    showInitialState();
+    $("searchInput").focus();
+  });
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".tab").forEach(item =>
+        item.classList.remove("active")
+      );
+
+      this.classList.add("active");
+      currentFilter = this.dataset.filter;
+
+      searchGloTube(currentQuery);
+    });
+  });
+
+  $("closeVideo").addEventListener("click", closeVideo);
+
+  $("videoModal").addEventListener("click", function(event) {
+    if (event.target === this) closeVideo();
+  });
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") closeVideo();
+  });
+
+  async function start() {
+    await checkAuth();
+    showInitialState();
+    $("searchInput").focus();
+  }
+
+  start();
+</script>
+
+</body>
+</html>
