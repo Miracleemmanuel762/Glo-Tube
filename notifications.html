@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications • Glo-Tube</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0;background:#f6f8fb;color:#111827;font-family:Arial,sans-serif}
+    body{min-height:100vh;padding-bottom:78px}
+    button,a{font:inherit}
+    button{cursor:pointer}
+
+    .topbar{
+      position:sticky;top:0;z-index:20;height:68px;
+      background:rgba(255,255,255,.96);backdrop-filter:blur(14px);
+      border-bottom:1px solid #e7ebf0;display:flex;align-items:center;
+      justify-content:space-between;padding:0 18px
+    }
+    .brand{color:#111827;text-decoration:none;font-size:22px;font-weight:900;letter-spacing:-.7px}
+    .brand span{color:#1877f2}
+    .top-actions{display:flex;gap:8px}
+    .icon-btn{
+      width:40px;height:40px;border:0;border-radius:50%;background:#f1f4f8;
+      color:#1f2937;font-size:19px;display:grid;place-items:center;text-decoration:none
+    }
+
+    .page{width:min(720px,100%);margin:auto;padding:18px 14px 30px}
+    .heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px 16px}
+    h1{font-size:27px;letter-spacing:-.6px;margin:0}
+    .subtitle{margin:5px 0 0;color:#6b7280;font-size:13px}
+    .mark-all{
+      border:0;background:#eaf3ff;color:#1877f2;border-radius:12px;
+      padding:10px 12px;font-size:12px;font-weight:800
+    }
+    .mark-all:disabled{opacity:.5}
+
+    .filters{
+      display:flex;gap:8px;overflow-x:auto;padding:2px 2px 14px;
+      scrollbar-width:none
+    }
+    .filters::-webkit-scrollbar{display:none}
+    .filter{
+      flex:0 0 auto;border:1px solid #e3e8ef;background:#fff;color:#667085;
+      border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800
+    }
+    .filter.active{background:#1877f2;border-color:#1877f2;color:#fff}
+
+    .card{
+      background:#fff;border:1px solid #e7ebf0;border-radius:18px;
+      overflow:hidden;box-shadow:0 6px 24px rgba(16,24,40,.05)
+    }
+    .notification{
+      position:relative;display:flex;gap:12px;padding:15px;
+      border-bottom:1px solid #edf0f4;transition:.18s
+    }
+    .notification:last-child{border-bottom:0}
+    .notification.unread{background:#f4f8ff}
+    .notification.unread:before{
+      content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#1877f2
+    }
+
+    .avatar{
+      flex:0 0 46px;width:46px;height:46px;border-radius:50%;
+      object-fit:cover;background:#1877f2;color:#fff;display:grid;place-items:center;
+      font-size:16px;font-weight:900;overflow:hidden
+    }
+    .content{min-width:0;flex:1}
+    .message{margin:1px 0 5px;font-size:14px;line-height:1.45;color:#1f2937}
+    .message strong{font-weight:800;color:#111827}
+    .time{font-size:11px;color:#98a2b3}
+    .badge{
+      flex:0 0 auto;align-self:flex-start;width:30px;height:30px;border-radius:10px;
+      display:grid;place-items:center;font-size:14px;background:#f1f5f9
+    }
+    .badge.message{background:#eaf3ff;color:#1877f2}
+    .badge.like{background:#fff0f3;color:#e11d48}
+    .badge.comment{background:#fff7e8;color:#b45309}
+    .badge.follow{background:#edfdf4;color:#15803d}
+    .badge.system{background:#f3e8ff;color:#7e22ce}
+
+    .empty{
+      padding:56px 24px;text-align:center;color:#667085
+    }
+    .empty-icon{font-size:42px;margin-bottom:10px}
+    .empty h2{margin:0 0 7px;font-size:18px;color:#1f2937}
+    .empty p{margin:0;font-size:13px;line-height:1.55}
+
+    .loading{padding:34px;text-align:center;color:#667085;font-size:13px}
+    .error{padding:22px;color:#b42318;background:#fff5f5;font-size:13px;line-height:1.5}
+
+    .bottom-nav{
+      position:fixed;left:0;right:0;bottom:0;height:68px;z-index:30;
+      background:rgba(255,255,255,.97);backdrop-filter:blur(14px);
+      border-top:1px solid #e4e7ec
+    }
+    .nav-inner{width:min(760px,100%);height:100%;margin:auto;display:grid;grid-template-columns:repeat(5,1fr)}
+    .nav-item{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;color:#667085;text-decoration:none;font-size:10px;font-weight:800
+    }
+    .nav-item b{font-size:20px;line-height:1}
+    .nav-item.active{color:#1877f2}
+
+    @media(min-width:700px){
+      .page{padding-top:28px}
+      .card{border-radius:20px}
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="home.html">Glo<span>-Tube</span></a>
+    <div class="top-actions">
+      <a class="icon-btn" href="search.html" aria-label="Search">⌕</a>
+      <a class="icon-btn" href="profile.html" aria-label="Profile">◯</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="heading-row">
+      <div>
+        <h1>Notifications</h1>
+        <p class="subtitle" id="subtitle">Stay up to date with your activity.</p>
+      </div>
+      <button class="mark-all" id="markAll" type="button">Mark all read</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter active" data-filter="all" type="button">All</button>
+      <button class="filter" data-filter="message" type="button">Messages</button>
+      <button class="filter" data-filter="like" type="button">Likes</button>
+      <button class="filter" data-filter="comment" type="button">Comments</button>
+      <button class="filter" data-filter="follow" type="button">Followers</button>
+      <button class="filter" data-filter="system" type="button">Updates</button>
+    </div>
+
+    <section class="card" id="notificationCard">
+      <div class="loading">Loading notifications…</div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <div class="nav-inner">
+      <a class="nav-item" href="home.html"><b>⌂</b><span>Home</span></a>
+      <a class="nav-item" href="discover.html"><b>◉</b><span>Discover</span></a>
+      <a class="nav-item" href="upload.html"><b>＋</b><span>Upload</span></a>
+      <a class="nav-item active" href="notifications.html"><b>♡</b><span>Alerts</span></a>
+      <a class="nav-item" href="profile.html"><b>◯</b><span>Profile</span></a>
+    </div>
+  </nav>
+
+<script>
+  let currentUser = null;
+  let allNotifications = [];
+  let activeFilter = "all";
+
+  const card = document.getElementById("notificationCard");
+  const subtitle = document.getElementById("subtitle");
+  const markAll = document.getElementById("markAll");
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  async function init(){
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if(error || !data.session){
+      location.replace("login.html");
+      return;
+    }
+
+    currentUser = data.session.user;
+    await loadNotifications();
+  }
+
+  async function loadNotifications(){
+    card.innerHTML = '<div class="loading">Loading notifications…</div>';
+
+    const { data, error } = await supabaseClient
+      .from("notifications")
+      .select(`
+        *,
+        sender:sender_id (
+          username,
+          first_name,
+          last_name,
+          profile_photo
+        )
+      `)
+      .eq("user_id", currentUser.id)
+      .order("created_at", { ascending:false });
+
+    if(error){
+      console.error("Notifications error:", error);
+      card.innerHTML = `
+        <div class="error">
+          Unable to load notifications right now.<br><br>
+          ${escapeHTML(error.message)}
+        </div>`;
+      return;
+    }
+
+    allNotifications = data || [];
+    renderNotifications();
+  }
+
+  function renderNotifications(){
+    let list = allNotifications;
+
+    if(activeFilter !== "all"){
+      list = list.filter(n => normalizeType(n.type) === activeFilter);
+    }
+
+    const unread = allNotifications.filter(n => !n.is_read).length;
+
+    subtitle.textContent = unread
+      ? `${unread} unread notification${unread === 1 ? "" : "s"}`
+      : "You're all caught up.";
+
+    markAll.disabled = unread === 0;
+
+    if(!list.length){
+      card.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">♢</div>
+          <h2>${activeFilter === "all" ? "You're all caught up" : "Nothing here yet"}</h2>
+          <p>
+            ${activeFilter === "all"
+              ? "New messages, likes, comments, followers and Glo-Tube updates will appear here."
+              : "Notifications of this type will appear here when you receive them."}
+          </p>
+        </div>`;
+      return;
+    }
+
+    card.innerHTML = list.map(notificationHTML).join("");
+
+    card.querySelectorAll("[data-notification-id]").forEach(item => {
+      item.addEventListener("click", () => {
+        markNotificationRead(item.dataset.notificationId);
+      });
+    });
+  }
+
+  function notificationHTML(n){
+    const type = normalizeType(n.type);
+    const sender = n.sender || {};
+    const username =
+      sender.username ||
+      sender.first_name ||
+      "Glo-Tube user";
+
+    const photo = sender.profile_photo;
+    const icon = type === "message" ? "✉"
+      : type === "like" ? "♥"
+      : type === "comment" ? "●"
+      : type === "follow" ? "＋"
+      : "◆";
+
+    const text = buildMessage(n, username);
+    const unreadClass = n.is_read ? "" : " unread";
+
+    const avatar = photo
+      ? `<img src="${escapeAttribute(photo)}" alt="" class="avatar">`
+      : `<div class="avatar">${escapeHTML(getInitial(username))}</div>`;
+
+    return `
+      <article class="notification${unreadClass}"
+        data-notification-id="${escapeAttribute(String(n.id))}">
+        ${avatar}
+        <div class="content">
+          <div class="message">${text}</div>
+          <div class="time">${formatTime(n.created_at)}</div>
+        </div>
+        <div class="badge ${type}">${icon}</div>
+      </article>`;
+  }
+
+  function buildMessage(n, username){
+    const safeUser = `<strong>@${escapeHTML(username)}</strong>`;
+    const custom = String(n.message || "").trim();
+
+    if(custom){
+      return `${safeUser} ${escapeHTML(custom)}`;
+    }
+
+    switch(normalizeType(n.type)){
+      case "message": return `${safeUser} sent you a new message.`;
+      case "like": return `${safeUser} liked your video.`;
+      case "comment": return `${safeUser} commented on your video.`;
+      case "follow": return `${safeUser} started following you.`;
+      default: return `You have a new Glo-Tube update.`;
+    }
+  }
+
+  function normalizeType(type){
+    const value = String(type || "system").toLowerCase();
+
+    if(value.includes("message") || value === "chat") return "message";
+    if(value.includes("like")) return "like";
+    if(value.includes("comment")) return "comment";
+    if(value.includes("follow")) return "follow";
+    return "system";
+  }
+
+  async function markNotificationRead(id){
+    const target = allNotifications.find(n => String(n.id) === String(id));
+    if(!target || target.is_read) return;
+
+    target.is_read = true;
+    renderNotifications();
+
+    const { error } = await supabaseClient
+      .from("notifications")
+      .update({ is_read:true })
+      .eq("id", id)
+      .eq("user_id", currentUser.id);
+
+    if(error){
+      console.error("Mark read error:", error);
+      target.is_read = false;
+      renderNotifications();
+    }
+  }
+
+  markAll.addEventListener("click", async function(){
+    if(!currentUser || markAll.disabled) return;
+
+    markAll.disabled = true;
+
+    const { error } = await supabaseClient
+      .from("notifications")
+      .update({ is_read:true })
+      .eq("user_id", currentUser.id)
+      .eq("is_read", false);
+
+    if(error){
+      console.error("Mark all read error:", error);
+      alert("Unable to mark notifications as read.");
+      markAll.disabled = false;
+      return;
+    }
+
+    allNotifications.forEach(n => n.is_read = true);
+    renderNotifications();
+  });
+
+  document.querySelectorAll(".filter").forEach(button => {
+    button.addEventListener("click", function(){
+      document.querySelectorAll(".filter").forEach(b => b.classList.remove("active"));
+      this.classList.add("active");
+      activeFilter = this.dataset.filter;
+      renderNotifications();
+    });
+  });
+
+  function formatTime(dateString){
+    if(!dateString) return "Just now";
+
+    const date = new Date(dateString);
+    const diff = Math.max(0, Date.now() - date.getTime());
+    const minutes = Math.floor(diff / 60000);
+
+    if(minutes < 1) return "Just now";
+    if(minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if(hours < 24) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
+    if(days < 7) return `${days}d ago`;
+
+    return date.toLocaleDateString(undefined, {
+      day:"numeric",
+      month:"short",
+      year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined
+    });
+  }
+
+  function getInitial(value){
+    const text = String(value || "G").trim();
+    return (text.charAt(0) || "G").toUpperCase();
+  }
+
+  function escapeHTML(value){
+    return String(value ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
+
+  function escapeAttribute(value){
+    return escapeHTML(value);
+  }
+</script>
+</body>
+</html>
