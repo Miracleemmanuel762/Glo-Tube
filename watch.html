@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Watch • Glo-Tube</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:Arial,sans-serif}
+button{font-family:inherit}
+.app,.watch{width:100%;height:100vh;position:relative;background:#000;overflow:hidden}
+.top-bar{position:fixed;top:0;left:0;width:100%;height:64px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;z-index:50;background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent)}
+.logo{font-size:22px;font-weight:800;letter-spacing:-.5px;text-shadow:0 2px 8px #000}.logo span{color:#3b9cff}
+.top-actions{display:flex;gap:9px}.top-icon{position:relative;width:40px;height:40px;border:0;border-radius:50%;background:rgba(0,0,0,.42);color:#fff;font-size:19px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;backdrop-filter:blur(8px);cursor:pointer}
+.badge{position:absolute;top:-6px;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:20px;background:#ff3040;color:#fff;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center}
+.back{font-size:29px}
+.video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;cursor:pointer}
+.top-gradient{position:absolute;top:0;left:0;width:100%;height:190px;background:linear-gradient(to bottom,rgba(0,0,0,.72),transparent);pointer-events:none}
+.bottom-gradient{position:absolute;bottom:0;left:0;width:100%;height:350px;background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.25),transparent);pointer-events:none}
+.play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);width:75px;height:75px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);font-size:31px;opacity:0;pointer-events:none;transition:.2s}.play.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.heart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.3);font-size:100px;opacity:0;pointer-events:none;text-shadow:0 4px 15px #000;transition:.35s}.heart.show{opacity:1;transform:translate(-50%,-50%) scale(1.25)}
+.info{position:absolute;left:15px;right:85px;bottom:78px;max-height:calc(100vh - 180px);overflow:auto;scrollbar-width:none;z-index:40;padding-bottom:35px}.info::-webkit-scrollbar{display:none}
+.creator-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}.creator-link{display:flex;align-items:center;gap:10px;min-width:0;color:#fff;text-decoration:none}.avatar{width:43px;height:43px;border-radius:50%;background:#1877f2;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;flex-shrink:0}.creator-name{font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 7px #000}
+.follow{border:1px solid #fff;background:rgba(24,119,242,.92);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;flex-shrink:0;cursor:pointer}.follow.following{background:rgba(0,0,0,.55)}
+.caption{font-size:15px;line-height:1.45;margin:0 0 7px;text-shadow:0 2px 7px #000;word-break:break-word}.views{font-size:12px;color:#ddd;text-shadow:0 2px 7px #000}
+.actions{position:absolute;right:12px;bottom:150px;width:55px;display:flex;flex-direction:column;align-items:center;gap:17px;z-index:20}.action{border:0;background:transparent;color:#fff;width:52px;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;text-shadow:0 2px 7px #000;cursor:pointer}.action-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.38);backdrop-filter:blur(7px);font-size:25px}.count{font-size:12px;font-weight:700}.liked .action-icon{color:#ff3040;background:rgba(255,255,255,.9)}
+.seek{position:absolute;right:12px;bottom:82px;z-index:41;display:flex;gap:7px}.seek button{border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.58);color:#fff;border-radius:18px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
+.progress{position:absolute;bottom:64px;left:0;width:100%;height:3px;background:rgba(255,255,255,.2);z-index:30}.progress i{display:block;height:100%;width:0;background:#fff}
+.nav{position:fixed;left:0;bottom:0;width:100%;height:64px;display:flex;align-items:center;justify-content:space-around;z-index:100;background:rgba(0,0,0,.78);border-top:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px)}.nav a{color:#bbb;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;min-width:55px}.nav .icon{font-size:20px}.plus{width:47px;height:34px;border-radius:9px;background:#fff;color:#000;font-size:25px;display:flex;align-items:center;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-end}.overlay.show{display:flex}.sheet{width:100%;max-height:72vh;background:#fff;color:#111;border-radius:20px 20px 0 0;display:flex;flex-direction:column}.comment-head{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #eee}.comment-head h3{margin:0;font-size:16px}.close{border:0;background:#f2f3f5;width:35px;height:35px;border-radius:50%}#comments{flex:1;overflow:auto;padding:10px 17px 15px;min-height:160px}.comment{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #eee}.comment .avatar{width:35px;height:35px;border:1px solid #e5e5e5}.comment-body{flex:1}.comment-user{font-size:13px;font-weight:800}.comment-text{font-size:14px;line-height:1.4;word-break:break-word}.comment-date{font-size:11px;color:#888;margin-top:4px}.empty{text-align:center;padding:40px 20px;color:#777}.form{display:flex;gap:8px;padding:10px;border-top:1px solid #eee}.input{flex:1;border:1px solid #ddd;border-radius:22px;padding:11px 15px;font-size:14px;outline:none}.send{border:0;border-radius:50%;width:43px;height:43px;background:#1877f2;color:#fff;font-size:17px}
+.loading,.error{height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px}.loading-logo{font-size:27px;font-weight:800;margin-bottom:18px}.loading-logo span{color:#3b9cff}.spinner{width:35px;height:35px;border:3px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.error h2{margin:12px 0 8px}.error p{color:#aaa;line-height:1.5}.error button{border:0;background:#1877f2;color:#fff;padding:12px 20px;border-radius:10px;font-weight:700}
+@media(min-width:700px){.watch{width:430px;margin:auto}.top-bar{width:430px;left:50%;transform:translateX(-50%)}.nav{width:430px;left:50%;transform:translateX(-50%);border-radius:15px 15px 0 0}.sheet{width:430px;margin:auto}}
+@media(max-width:430px){.info{left:14px;right:82px;bottom:82px}.actions{right:9px;bottom:145px}.seek{right:9px;bottom:78px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top-bar">
+<button class="top-icon back" id="back">‹</button>
+<div class="logo">Glo-<span>Tube</span></div>
+<div class="top-actions">
+<a class="top-icon" href="messages.html">💬<span class="badge" id="msgBadge">0</span></a>
+<a class="top-icon" href="notifications.html">🔔<span class="badge" id="noteBadge">0</span></a>
+</div>
+</header>
+
+<main class="watch" id="watch">
+<div class="loading" id="loading"><div class="loading-logo">Glo-<span>Tube</span></div><div class="spinner"></div></div>
+</main>
+
+<nav class="nav">
+<a href="home.html"><span class="icon">⌂</span><span>Home</span></a>
+<a href="discover.html"><span class="icon">🔍</span><span>Discover</span></a>
+<a href="upload.html"><span class="plus">+</span></a>
+<a href="notifications.html"><span class="icon">🔔</span><span>Alerts</span></a>
+<a href="profile.html"><span class="icon">👤</span><span>Profile</span></a>
+</nav>
+</div>
+
+<div class="overlay" id="overlay">
+<div class="sheet">
+<div class="comment-head"><h3>Comments</h3><button class="close" id="close">✕</button></div>
+<div id="comments"></div>
+<form class="form" id="form"><input class="input" id="input" maxlength="500" placeholder="Add a comment..." autocomplete="off"><button class="send">➤</button></form>
+</div>
+</div>
+
+<script>
+let currentUser=null, item=null, player=null, lastTap=0, audioContext=null;
+const params=new URLSearchParams(location.search);
+const videoId=params.get("id")||params.get("video");
+
+function esc(v){return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+function attr(v){return esc(v)}
+function initial(v){v=String(v||"U").trim();return v?v[0].toUpperCase():"U"}
+function ago(d){if(!d)return"";let s=Math.floor((Date.now()-new Date(d).getTime())/1000);if(s<60)return"Just now";let m=Math.floor(s/60);if(m<60)return m+" min ago";let h=Math.floor(m/60);if(h<24)return h+" hr ago";let days=Math.floor(h/24);return days<7?days+" day"+(days===1?"":"s")+" ago":new Date(d).toLocaleDateString()}
+
+async function session(){const {data}=await supabaseClient.auth.getSession();currentUser=data?.session?.user||null}
+function badge(el,n){if(!el)return;if(n>0){el.textContent=n>99?"99+":n;el.style.display="flex"}else el.style.display="none"}
+async function counts(){if(!currentUser)return;try{let a=await supabaseClient.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",currentUser.id).eq("is_read",false);if(!a.error)badge(document.getElementById("noteBadge"),a.count||0);let b=await supabaseClient.from("messages").select("id",{count:"exact",head:true}).eq("receiver_id",currentUser.id).eq("is_read",false);if(!b.error)badge(document.getElementById("msgBadge"),b.count||0)}catch(e){console.log(e)}}
+
+async function load(){
+if(!videoId){error("No video was selected.");return}
+let id=Number(videoId);if(!Number.isInteger(id)){error("Invalid video link.");return}
+try{
+let {data,error:e}=await supabaseClient.from("videos").select("*,profiles:user_id(username,first_name,last_name,profile_photo,bio)").eq("id",id).maybeSingle();
+if(e)throw e;if(!data){error("This video could not be found.");return}item=data;render();stats();followState();view()
+}catch(e){console.error(e);error(e.message||"Unable to load this video.")}
+}
+
+function render(){
+document.getElementById("watch").innerHTML=`
+<div class="top-gradient"></div>
+<video class="video" id="player" preload="metadata" playsinline loop ${item.thumbnail_url?`poster="${attr(item.thumbnail_url)}"`:""} src="${attr(item.video_url)}"></video>
+<div class="bottom-gradient"></div><div class="play" id="play">▶</div><div class="heart" id="heart">❤️</div>
+<div class="info"><div class="creator-row">
+<a class="creator-link" href="creator.html?id=${encodeURIComponent(item.user_id)}">
+${item.profiles?.profile_photo?`<img class="avatar" src="${attr(item.profiles.profile_photo)}">`:`<div class="avatar">${initial(item.profiles?.username||item.username)}</div>`}
+<div class="creator-name">@${esc(item.profiles?.username||item.username||"creator")}</div></a>
+<button class="follow" id="follow">Follow</button></div>
+<p class="caption">${esc(item.caption||"")}</p><div class="views" id="views">${Number(item.views||0).toLocaleString()} views • ${ago(item.created_at)}</div></div>
+<div class="actions">
+<button class="action" id="like"><span class="action-icon">❤️</span><span class="count" id="likes">0</span></button>
+<button class="action" id="comment"><span class="action-icon">💬</span><span class="count" id="commentCount">0</span></button>
+<button class="action" id="share"><span class="action-icon">↗️</span><span class="count">Share</span></button>
+</div>
+<div class="seek"><button data-seek="-10">↶ 10s</button><button data-seek="10">10s ↷</button></div>
+<div class="progress"><i id="bar"></i></div>`;
+player=document.getElementById("player");
+player.addEventListener("click",()=>{if(player.paused){player.play().catch(()=>{});showPlay("❚❚")}else{player.pause();showPlay("▶")}});
+player.addEventListener("timeupdate",()=>{if(player.duration)document.getElementById("bar").style.width=(player.currentTime/player.duration*100)+"%"});
+player.addEventListener("touchend",()=>{let now=Date.now();if(now-lastTap<300){showHeart();like()}lastTap=now});
+document.querySelectorAll("[data-seek]").forEach(b=>b.onclick=e=>{e.stopPropagation();player.currentTime=Math.max(0,Math.min(player.currentTime+Number(b.dataset.seek),player.duration||Infinity))});
+document.getElementById("like").onclick=like;document.getElementById("comment").onclick=openComments;document.getElementById("share").onclick=share;document.getElementById("follow").onclick=toggleFollow;
+player.play().catch(()=>showPlay("▶"));
+}
+
+function showPlay(t){let x=document.getElementById("play");x.textContent=t;x.classList.add("show");clearTimeout(x.t);x.t=setTimeout(()=>x.classList.remove("show"),600)}
+function showHeart(){let x=document.getElementById("heart");x.classList.add("show");clearTimeout(x.t);x.t=setTimeout(()=>x.classList.remove("show"),450)}
+
+async function stats(){
+let [l,c]=await Promise.all([
+currentUser?supabaseClient.from("likes").select("id").eq("video_id",item.id).eq("user_id",currentUser.id).maybeSingle():Promise.resolve({data:null}),
+supabaseClient.from("likes").select("id",{count:"exact",head:true}).eq("video_id",item.id),
+supabaseClient.from("comments").select("id",{count:"exact",head:true}).eq("video_id",item.id)
+]);
+if(l.data)document.getElementById("like").classList.add("liked");
+document.getElementById("likes").textContent=c?.count||0;
+let cc=arguments; // harmless placeholder
+let r=await supabaseClient.from("comments").select("id",{count:"exact",head:true}).eq("video_id",item.id);
+document.getElementById("commentCount").textContent=r.count||0;
+}
+
+async function like(){
+if(!currentUser){alert("Please log in to like videos.");return}
+let b=document.getElementById("like"),n=document.getElementById("likes");if(b.disabled)return;b.disabled=true;
+try{if(b.classList.contains("liked")){let {error:e}=await supabaseClient.from("likes").delete().eq("video_id",item.id).eq("user_id",currentUser.id);if(e)throw e;b.classList.remove("liked");n.textContent=Math.max(0,Number(n.textContent)-1)}
+else{let {error:e}=await supabaseClient.from("likes").insert({video_id:item.id,user_id:currentUser.id});if(e)throw e;b.classList.add("liked");n.textContent=Number(n.textContent)+1;likeSound()}}catch(e){alert("Unable to update your like.\n\n"+e.message)}finally{b.disabled=false}
+}
+
+async function followState(){
+let b=document.getElementById("follow");if(!b||!currentUser||currentUser.id===item.user_id){if(b)b.style.display="none";return}
+let {data}=await supabaseClient.from("followers").select("id").eq("follower_id",currentUser.id).eq("following_id",item.user_id).limit(1);if(data?.length){b.textContent="Following";b.classList.add("following")}
+}
+async function toggleFollow(){
+if(!currentUser){alert("Please log in to follow creators.");return}let b=document.getElementById("follow");b.disabled=true;
+try{let {data,error:e}=await supabaseClient.from("followers").select("id").eq("follower_id",currentUser.id).eq("following_id",item.user_id).limit(1);if(e)throw e;
+if(data?.length){let {error:x}=await supabaseClient.from("followers").delete().eq("follower_id",currentUser.id).eq("following_id",item.user_id);if(x)throw x;b.textContent="Follow";b.classList.remove("following")}
+else{let {error:x}=await supabaseClient.from("followers").insert({follower_id:currentUser.id,following_id:item.user_id});if(x)throw x;b.textContent="Following";b.classList.add("following")}}catch(e){alert("Unable to update follow status.\n\n"+e.message)}finally{b.disabled=false}
+}
+async function view(){let v=Number(item.views||0)+1;let {error:e}=await supabaseClient.from("videos").update({views:v}).eq("id",item.id);if(!e){item.views=v;document.getElementById("views").textContent=v.toLocaleString()+" views • "+ago(item.created_at)}}
+
+async function openComments(){player?.pause();document.getElementById("overlay").classList.add("show");document.getElementById("comments").innerHTML='<div class="empty">Loading comments...</div>';await loadComments()}
+async function loadComments(){
+let {data,error:e}=await supabaseClient.from("comments").select("*,profiles:user_id(username,profile_photo)").eq("video_id",item.id).order("created_at",{ascending:true});let box=document.getElementById("comments");
+if(e){box.innerHTML='<div class="empty">Unable to load comments.<br><br>'+esc(e.message)+'</div>';return}
+if(!data?.length){box.innerHTML='<div class="empty">No comments yet.<br>Be the first to comment.</div>';return}
+box.innerHTML="";data.forEach(c=>{let u=c.profiles?.username||c.username||"User";let d=document.createElement("div");d.className="comment";d.innerHTML=`${c.profiles?.profile_photo?`<img class="avatar" src="${attr(c.profiles.profile_photo)}">`:`<div class="avatar">${initial(u)}</div>`}<div class="comment-body"><div class="comment-user">@${esc(u)}</div><div class="comment-text">${esc(c.comment)}</div><div class="comment-date">${ago(c.created_at)}</div></div>`;box.appendChild(d)})
+}
+document.getElementById("close").onclick=()=>{document.getElementById("overlay").classList.remove("show");player?.play().catch(()=>{})};
+document.getElementById("overlay").onclick=e=>{if(e.target===e.currentTarget)document.getElementById("close").click()};
+document.getElementById("form").onsubmit=async e=>{e.preventDefault();let input=document.getElementById("input"),text=input.value.trim();if(!text)return;if(!currentUser){alert("Please log in to comment.");return}let btn=e.target.querySelector(".send");btn.disabled=true;try{let u=currentUser.user_metadata?.username||currentUser.email?.split("@")[0]||"User";let {error:x}=await supabaseClient.from("comments").insert({video_id:Number(item.id),user_id:currentUser.id,username:u,comment:text});if(x)throw x;input.value="";await loadComments();let r=await supabaseClient.from("comments").select("id",{count:"exact",head:true}).eq("video_id",item.id);document.getElementById("commentCount").textContent=r.count||0;commentSound()}catch(x){alert("Unable to post comment.\n\n"+x.message)}finally{btn.disabled=false}};
+async function share(){let url=location.origin+location.pathname+"?id="+encodeURIComponent(item.id);try{if(navigator.share)await navigator.share({title:"Watch on Glo-Tube",text:"Watch @"+(item.username||"creator")+" on Glo-Tube",url});else{await navigator.clipboard.writeText(url);alert("Glo-Tube video link copied!")}}catch(e){}}
+function ctx(){if(!audioContext){let A=window.AudioContext||window.webkitAudioContext;if(!A)return null;audioContext=new A}if(audioContext.state==="suspended")audioContext.resume();return audioContext}
+function likeSound(){let c=ctx();if(!c)return;let n=c.currentTime,g=c.createGain(),a=c.createOscillator();a.frequency.setValueAtTime(650,n);a.frequency.exponentialRampToValueAtTime(1000,n+.08);g.gain.setValueAtTime(.001,n);g.gain.exponentialRampToValueAtTime(.9,n+.02);g.gain.exponentialRampToValueAtTime(.001,n+.28);a.connect(g);g.connect(c.destination);a.start(n);a.stop(n+.3)}
+function commentSound(){let c=ctx();if(!c)return;let n=c.currentTime,g=c.createGain();g.gain.setValueAtTime(.001,n);g.gain.exponentialRampToValueAtTime(.7,n+.02);g.gain.exponentialRampToValueAtTime(.001,n+.4);g.connect(c.destination);[660,880,1100].forEach((f,i)=>{let a=c.createOscillator();a.frequency.value=f;a.connect(g);a.start(n+i*.06);a.stop(n+.16+i*.06)})}
+function error(m){document.getElementById("watch").innerHTML='<div class="error"><div class="loading-logo">Glo-<span>Tube</span></div><h2>Unable to watch video</h2><p>'+esc(m)+'</p><button onclick="location.href=\'home.html\'">Back to Home</button></div>'}
+document.getElementById("back").onclick=()=>history.length>1?history.back():location.href="home.html";
+session().finally(()=>{counts();load()});
+</script>
+</body>
+</html>
