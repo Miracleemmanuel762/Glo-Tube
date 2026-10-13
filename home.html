@@ -614,6 +614,33 @@
       font-weight: bold;
     }
 
+    .header-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 22px;
+}
+
+.notification-badge,
+.message-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 20px;
+  background: #ff3040;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  }
+
     @media (min-width: 700px) {
       .video-item {
         width: 430px;
@@ -677,6 +704,10 @@
       <button class="top-icon" id="logoutButton">
         ⋮
       </button>
+      <a href="messages.html" class="top-icon" id="messageButton">
+  💬
+  <span class="message-badge" id="messageCount">0</span>
+  </a>
 
     </div>
 
@@ -700,9 +731,9 @@
       <span class="upload-nav">+</span>
     </button>
 
-    <button class="nav-item" id="notificationsNav">
+    <a class="nav-item" id="notificationsNav">
       <span class="nav-icon">🔔</span>
-      <span>Alerts</span>
+      <span class="" id="notificationCount">0</span>
     </button>
 
     <button class="nav-item" id="profileNav">
