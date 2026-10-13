@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Glo-Tube — Create Video</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}button,input,textarea{font:inherit}.page{max-width:720px;margin:auto;padding:18px 16px 110px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{font-size:23px;font-weight:800}.brand span{color:#3b9cff}.back{color:#fff;text-decoration:none;background:#171717;border:1px solid #2a2a2a;border-radius:12px;padding:9px 12px}.picker{border:1px dashed #555;border-radius:18px;padding:28px;text-align:center;background:#111}.picker input{width:100%;margin-top:14px}.preview-wrap{display:none;margin-top:16px;background:#000;border-radius:18px;overflow:hidden;position:relative}.preview-wrap video{display:block;width:100%;max-height:62vh;object-fit:contain;background:#000}.tools{display:none;margin-top:16px;background:#111;border:1px solid #242424;border-radius:18px;padding:15px}.tool-title{font-weight:800;margin:0 0 10px}.row{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.tool{flex:0 0 auto;border:1px solid #333;background:#181818;color:#fff;border-radius:12px;padding:10px 13px}.tool.active{border-color:#3b9cff;background:#10243a}.field{margin-top:15px}.field label{display:block;font-size:13px;color:#aaa;margin-bottom:7px}.range{width:100%}textarea{width:100%;min-height:90px;background:#171717;color:#fff;border:1px solid #333;border-radius:12px;padding:12px;resize:vertical}.actions{display:none;margin-top:16px;gap:10px}.primary,.secondary{border:0;border-radius:13px;padding:13px 16px;font-weight:800}.primary{background:#3b9cff;color:#fff;flex:1}.secondary{background:#222;color:#fff}.status{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#121212;color:#bbb;font-size:14px;line-height:1.45}.music-name{font-size:12px;color:#aaa;margin-top:7px}.hidden{display:none!important}@media(min-width:600px){.preview-wrap video{max-height:68vh}}
+.music-search input{width:100%;background:#171717;color:#fff;border:1px solid #333;border-radius:12px;padding:11px 12px;outline:none}.music-list{margin-top:10px;display:grid;gap:8px;max-height:270px;overflow:auto}.music-item{display:flex;align-items:center;gap:10px;background:#171717;border:1px solid #292929;border-radius:13px;padding:10px}.music-item.active{border-color:#3b9cff;background:#10243a}.music-play{width:38px;height:38px;border:0;border-radius:50%;background:#242424;color:#fff;font-size:15px;flex:0 0 38px}.music-item-info{min-width:0;flex:1}.music-item-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.music-item-meta{font-size:11px;color:#999;margin-top:3px}.music-use{border:1px solid #3b9cff;background:transparent;color:#fff;border-radius:9px;padding:8px 10px;font-weight:700}.music-empty{padding:16px;text-align:center;color:#888;background:#141414;border-radius:12px}.music-selected{font-size:12px;color:#aaa;margin-top:8px}.music-clear{display:none;color:#8fc5ff;font-size:12px;text-decoration:none;margin-top:6px}.music-clear.show{display:inline-block}</style>
+</head>
+<body>
+<main class="page">
+<header class="top"><div class="brand">Glo-<span>Tube</span></div><a class="back" href="home.html">Cancel</a></header>
+<section class="picker" id="picker"><h2>Choose a video</h2><p style="color:#aaa">Select a video from your phone, then edit it before posting.</p><input id="videoFile" type="file" accept="video/*"></section>
+<section class="preview-wrap" id="previewWrap"><video id="preview" playsinline controls></video></section>
+<section class="tools" id="tools">
+<h3 class="tool-title">Effects</h3>
+<div class="row" id="filters">
+<button class="tool active" data-filter="none">Normal</button><button class="tool" data-filter="brightness">Bright</button><button class="tool" data-filter="contrast">Contrast</button><button class="tool" data-filter="saturate">Vivid</button><button class="tool" data-filter="grayscale">B&W</button><button class="tool" data-filter="sepia">Warm</button>
+</div>
+<div class="field"><label>Speed</label><div class="row" id="speeds"><button class="tool active" data-speed="1">1×</button><button class="tool" data-speed="0.5">0.5×</button><button class="tool" data-speed="1.5">1.5×</button><button class="tool" data-speed="2">2×</button></div></div>
+<div class="field"><label>Original sound</label><input class="range" id="videoVolume" type="range" min="0" max="1" step="0.05" value="1"></div>
+<div class="field music-section"><label>🎵 Glo-Tube Sounds</label><div class="music-search"><input id="musicSearch" type="search" placeholder="Search instrumental sounds..."></div><div id="musicList" class="music-list"><div class="music-empty">Loading sounds…</div></div><div class="music-selected" id="musicName">No sound selected.</div><a class="music-clear" href="#" id="clearMusic">Remove selected sound</a></div>
+<div class="field"><label>Background sound volume</label><input class="range" id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.6"></div>
+<div class="field"><label>Caption</label><textarea id="caption" maxlength="1000" placeholder="Write a caption..."></textarea></div>
+</section>
+<div class="actions" id="actions"><button class="secondary" id="reset" type="button">Reset</button><button class="primary" id="post" type="button">Render &amp; Post</button></div>
+<div class="status" id="status"></div>
+</main>
+<script>
+const CLOUDINARY_CLOUD="dg9qaek0h", CLOUDINARY_PRESET="glotube_uploads";
+const $=id=>document.getElementById(id);
+let currentUser=null, videoURL="", audioURL="", filterName="none", speed=1, audioFile=null, musicLibrary=[], selectedMusicId=null, musicPreview=null;
+const filterMap={none:"none",brightness:"brightness(1.25)",contrast:"contrast(1.3)",saturate:"saturate(1.7)",grayscale:"grayscale(1)",sepia:"sepia(.75)"};
+function status(text,show=true){$("status").style.display=show?"block":"none";$("status").textContent=text}
+async function boot(){const {data}=await supabaseClient.auth.getSession();currentUser=data.session?.user||null;if(!currentUser){location.replace("login.html");return}}
+boot().then(loadMusicLibrary);
+$("videoFile").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;videoURL=URL.createObjectURL(file);$("preview").src=videoURL;$("previewWrap").style.display="block";$("tools").style.display="block";$("actions").style.display="flex";$("preview").load()});
+$("filters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;document.querySelectorAll("#filters .tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");filterName=b.dataset.filter;$("preview").style.filter=filterMap[filterName]||"none"});
+$("speeds").addEventListener("click",e=>{const b=e.target.closest("button[data-speed]");if(!b)return;document.querySelectorAll("#speeds .tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");speed=Number(b.dataset.speed);$("preview").playbackRate=speed});
+$("videoVolume").addEventListener("input",e=>$("preview").volume=Number(e.target.value));
+$("reset").onclick=()=>{filterName="none";speed=1;$("preview").style.filter="none";$("preview").playbackRate=1;$("preview").volume=1;$("videoVolume").value=1;$("musicVolume").value=.6;document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));document.querySelector('#filters [data-filter="none"]').classList.add("active");document.querySelector('#speeds [data-speed="1"]').classList.add("active");selectedMusicId=null;audioURL="";$("musicName").textContent="No sound selected.";$("clearMusic").classList.remove("show");renderMusicLibrary(musicLibrary)};
+async function loadMusicLibrary(){
+  const list=$("musicList");
+  try{
+    const {data,error}=await supabaseClient.from("music").select("id,title,artist,audio_url,category,duration").eq("is_active",true).order("created_at",{ascending:false});
+    if(error) throw error;
+    musicLibrary=data||[];
+    renderMusicLibrary(musicLibrary);
+  }catch(error){
+    console.error("Music library error:",error);
+    list.innerHTML='<div class="music-empty">The Glo-Tube sound library is not available yet.</div>';
+  }
+}
+function escapeHtml(value){return String(value).replace(/[&<>\'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\'":"&#39;","\"":"&quot;"}[c]))}
+function renderMusicLibrary(items){
+  const list=$("musicList");
+  if(!items.length){list.innerHTML='<div class="music-empty">No instrumental sounds found.</div>';return}
+  list.innerHTML=items.map(m=>`<div class="music-item ${selectedMusicId===m.id?"active":""}"><button class="music-play" type="button" data-play-music="${m.id}">▶</button><div class="music-item-info"><div class="music-item-title">${escapeHtml(m.title||"Untitled")}</div><div class="music-item-meta">${escapeHtml(m.artist||"Glo-Tube Instrumental")} · ${escapeHtml(m.category||"Instrumental")}</div></div><button class="music-use" type="button" data-use-music="${m.id}">Use</button></div>`).join("");
+}
+function stopMusicPreview(){if(musicPreview){musicPreview.pause();musicPreview.currentTime=0;musicPreview=null}}
+function previewMusic(id){
+  const m=musicLibrary.find(x=>String(x.id)===String(id)); if(!m||!m.audio_url)return;
+  if(musicPreview&&musicPreview.dataset.id===String(id)){stopMusicPreview();return}
+  stopMusicPreview(); musicPreview=new Audio(m.audio_url); musicPreview.dataset.id=String(id); musicPreview.preload="auto"; musicPreview.volume=.7;
+  musicPreview.play().catch(()=>status("Tap the play button again to preview this sound."));
+  musicPreview.onended=()=>{musicPreview=null};
+}
+function useMusic(id){
+  const m=musicLibrary.find(x=>String(x.id)===String(id)); if(!m||!m.audio_url)return;
+  stopMusicPreview(); selectedMusicId=m.id; audioURL=m.audio_url; $("musicName").textContent=`Selected: ${m.title||"Instrumental"}${m.artist?" — "+m.artist:""}`; $("clearMusic").classList.add("show"); renderMusicLibrary(musicLibrary);
+}
+$("musicList").addEventListener("click",e=>{const play=e.target.closest("[data-play-music]"),use=e.target.closest("[data-use-music]");if(play)previewMusic(play.dataset.playMusic);if(use)useMusic(use.dataset.useMusic)});
+$("musicSearch").addEventListener("input",e=>{const q=e.target.value.trim().toLowerCase();renderMusicLibrary(musicLibrary.filter(m=>[m.title,m.artist,m.category].some(v=>String(v||"").toLowerCase().includes(q))))});
+$("clearMusic").addEventListener("click",e=>{e.preventDefault();stopMusicPreview();selectedMusicId=null;audioURL="";$("musicName").textContent="No sound selected.";$("clearMusic").classList.remove("show");renderMusicLibrary(musicLibrary)});
+
+function getUsername(){return currentUser.user_metadata?.username||currentUser.email?.split("@")[0]||"User"}
+async function cloudinaryUpload(blob,resource="video"){const fd=new FormData();fd.append("file",blob,resource==="video"?"glotube-edited.webm":"source-audio");fd.append("upload_preset",CLOUDINARY_PRESET);const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resource}/upload`,{method:"POST",body:fd});const j=await r.json();if(!r.ok||!j.secure_url)throw new Error(j.error?.message||"Cloudinary upload failed");return j.secure_url}
+async function renderEdited(){
+  if(!videoURL) throw new Error("Please choose a video first.");
+  const v=document.createElement("video");
+  v.src=videoURL; v.playsInline=true; v.preload="auto"; v.muted=false;
+  v.style.position="fixed"; v.style.left="-99999px"; v.style.width="1px"; v.style.height="1px";
+  document.body.appendChild(v);
+  await new Promise((resolve,reject)=>{if(v.readyState>=2&&v.videoWidth>0){resolve();return;}v.addEventListener("canplay",resolve,{once:true});v.addEventListener("error",()=>reject(new Error("Could not load the selected video.")),{once:true});v.load();});
+  const canvas=document.createElement("canvas");
+  const w=v.videoWidth||720,h=v.videoHeight||1280,scale=Math.min(1,1280/Math.max(w,h));
+  canvas.width=Math.max(2,Math.round(w*scale));canvas.height=Math.max(2,Math.round(h*scale));
+  const ctx=canvas.getContext("2d",{alpha:false});
+  const AC=window.AudioContext||window.webkitAudioContext;if(!ctx||!AC){v.remove();throw new Error("Your browser cannot render this video. Please use Chrome.");}
+  const ac=new AC(),dest=ac.createMediaStreamDestination(),vs=ac.createMediaElementSource(v),vg=ac.createGain();
+  vg.gain.value=Number($("videoVolume").value);vs.connect(vg);vg.connect(dest);
+  let musicAudio=null;
+  if(audioURL){musicAudio=document.createElement("audio");musicAudio.src=audioURL;musicAudio.preload="auto";const ms=ac.createMediaElementSource(musicAudio),mg=ac.createGain();mg.gain.value=Number($("musicVolume").value);ms.connect(mg);mg.connect(dest);await new Promise((res,rej)=>{if(musicAudio.readyState>=2)res();else{musicAudio.addEventListener("canplay",res,{once:true});musicAudio.addEventListener("error",()=>rej(new Error("Could not load the background sound.")),{once:true});musicAudio.load();}});}
+  const stream=canvas.captureStream(30);dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+  const types=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];const mime=types.find(t=>MediaRecorder.isTypeSupported(t));
+  if(!mime){stream.getTracks().forEach(t=>t.stop());ac.close();v.remove();throw new Error("Chrome could not create a video recorder.");}
+  let recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime});}catch(e){stream.getTracks().forEach(t=>t.stop());ac.close();v.remove();throw new Error("Video recorder could not start: "+e.message);}
+  const chunks=[];let raf=0,done=false;
+  const cleanup=()=>{cancelAnimationFrame(raf);v.pause();if(musicAudio)musicAudio.pause();stream.getTracks().forEach(t=>t.stop());ac.close().catch(()=>{});v.remove();};
+  return await new Promise((resolve,reject)=>{
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+    recorder.onerror=e=>{if(done)return;done=true;cleanup();reject(e.error||new Error("Video rendering failed."));};
+    recorder.onstop=()=>{if(done)return;done=true;const blob=new Blob(chunks,{type:mime});cleanup();if(!blob.size){reject(new Error("The browser produced an empty video. Please try again in Chrome."));return;}resolve(blob);};
+    const draw=()=>{if(done)return;ctx.save();ctx.filter=filterMap[filterName]||"none";ctx.drawImage(v,0,0,canvas.width,canvas.height);ctx.restore();raf=requestAnimationFrame(draw);};
+    const finish=()=>{if(!done&&recorder.state!=="inactive")recorder.stop();};
+    v.currentTime=0;v.playbackRate=speed;v.addEventListener("ended",finish,{once:true});recorder.start(500);draw();
+    ac.resume().then(()=>v.play()).then(()=>{if(musicAudio)musicAudio.play().catch(()=>{});}).catch(e=>{if(!done){done=true;cleanup();reject(e);}});
+    setTimeout(finish,(Math.max(2,(v.duration||10)/Math.max(speed,.1))+3)*1000);
+  });
+}
+$("post").onclick=async()=>{if(!currentUser){location.replace("login.html");return}const post=$("post");post.disabled=true;post.textContent="Rendering…";status("Rendering your edited video. Please keep this page open…");try{const blob=await renderEdited();if(!blob||blob.size===0)throw new Error("The edited video is empty. Please try again in Chrome.");status("Uploading the finished video…");const url=await cloudinaryUpload(blob,"video");const {error}=await supabaseClient.from("videos").insert({user_id:currentUser.id,username:getUsername(),video_url:url,caption:$("caption").value.trim(),views:0});if(error)throw error;status("Posted successfully. Opening Glo-Tube…");setTimeout(()=>location.replace("home.html"),500)}catch(err){console.error(err);status("Could not post: "+(err.message||err));post.disabled=false;post.textContent="Render & Post"}};
+</script>
+</body>
+</html>
