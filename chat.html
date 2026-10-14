@@ -1643,9 +1643,17 @@ el.refresh.addEventListener("click", function () {
 /* INITIALIZE CHAT */
 
 async function initializeChat() {
+  // Show the loading state.
+  el.messages.replaceChildren(
+    createElement("div", "loading", "Connecting to Glo-Tube...")
+  );
+
+  // Verify the Supabase client.
   if (!supabaseClient) {
+    el.userName.textContent = "Connection error";
+
     showNotice(
-      "Supabase is not initialized. Check supabase.js and ensure it sets window.supabaseClient.",
+      "Supabase is not initialized. Check your supabase.js file.",
       "error"
     );
 
@@ -1653,26 +1661,27 @@ async function initializeChat() {
       createElement(
         "div",
         "empty-state",
-        "Chat could not start because Supabase is not connected."
+        "Could not connect to Supabase. Check your configuration."
       )
     );
 
     return;
   }
 
+  // Verify the recipient.
   if (!otherUserId) {
+    el.userName.textContent = "No conversation selected";
+
     showNotice(
-      "No recipient selected. Open chat.html?user=USER_ID.",
+      "No recipient ID was provided in the URL.",
       "error"
     );
-
-    el.userName.textContent = "No conversation selected";
 
     el.messages.replaceChildren(
       createElement(
         "div",
         "empty-state",
-        "Select a user first to start chatting."
+        "Open a conversation using chat.html?user=USER_ID."
       )
     );
 
@@ -1680,39 +1689,72 @@ async function initializeChat() {
   }
 
   try {
-    const {
-      data: { user },
-      error
-    } = await supabaseClient.auth.getUser();
+    el.messages.replaceChildren(
+      createElement("div", "loading", "Checking your login...")
+    );
 
-    if (error) throw error;
+    // Get the authenticated user.
+    const authResult = await Promise.race([
+      supabaseClient.auth.getUser(),
+      new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error("Login verification timed out."));
+        }, 15000);
+      })
+    ]);
 
-    if (!user) {
-      showNotice(
-        "Please log in to use Glo-Tube Messages.",
-        "error"
-      );
-
-      setTimeout(function () {
-        window.location.href = "login.html";
-      }, 1500);
-
-      return;
+    if (authResult.error) {
+      throw authResult.error;
     }
 
-    currentUser = user;
+    currentUser = authResult.data.user;
+
+    if (!currentUser) {
+      el.messages.replaceChildren(
+        createElement(
+          "div",
+          "empty-state",
+          "You need to log in before opening messages."
+        )
+      );
+
+      showNotice("Please log in to continue.", "error");
+      return;
+    }
 
     if (sameId(currentUser.id, otherUserId)) {
-      showNotice(
-        "You cannot start a conversation with yourself.",
-        "error"
+      el.messages.replaceChildren(
+        createElement(
+          "div",
+          "empty-state",
+          "You cannot start a conversation with yourself."
+        )
       );
 
+      showNotice("Please select another user.", "error");
       return;
     }
 
+    el.messages.replaceChildren(
+      createElement("div", "loading", "Loading conversation...")
+    );
+
+    // Load the recipient's profile.
     await loadOtherProfile();
-    await loadMessages(true);
+
+    el.messages.replaceChildren(
+      createElement("div", "loading", "Loading messages...")
+    );
+
+    // Load messages.
+    await Promise.race([
+      loadMessages(true),
+      new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error("Loading messages timed out."));
+        }, 20000);
+      })
+    ]);
 
     el.userStatus.textContent = "Glo-Tube Messages";
 
@@ -1725,23 +1767,20 @@ async function initializeChat() {
   } catch (error) {
     console.error("Chat initialization error:", error);
 
+    el.messages.replaceChildren(
+      createElement(
+        "div",
+        "empty-state",
+        "The conversation could not load. Check your internet connection and Supabase configuration, then refresh."
+      )
+    );
+
     showNotice(
-      "Could not initialize chat: " + error.message,
+      "Chat error: " + error.message,
       "error"
     );
   }
-}
-
-/* CLEANUP */
-
-window.addEventListener("beforeunload", function () {
-  clearInterval(refreshTimer);
-  stopRecordingTracks();
-});
-
-initializeChat();
-
-})();
+  }
 </script>
 
 </body>
