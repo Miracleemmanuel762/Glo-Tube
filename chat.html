@@ -1,1582 +1,1724 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Messages | Glo-Tube</title>  <style>  
+* {  
+  box-sizing: border-box;  
+  margin: 0;  
+  padding: 0;  
+}  
+  
+:root {  
+  --blue: #1685ff;  
+  --dark: #101820;  
+  --text: #17212b;  
+  --muted: #6b7886;  
+  --border: #e6ebf0;  
+  --incoming: #ffffff;  
+  --outgoing: #d9fdd3;  
+  --background: #f4f7fa;  
+}  
+  
+body {  
+  font-family: Arial, Helvetica, sans-serif;  
+  background: var(--background);  
+  color: var(--text);  
+  height: 100dvh;  
+  overflow: hidden;  
+}  
+  
+button,  
+input {  
+  font: inherit;  
+}  
+  
+button {  
+  cursor: pointer;  
+}  
+  
+button:disabled {  
+  opacity: 0.5;  
+  cursor: not-allowed;  
+}  
+  
+.app {  
+  width: 100%;  
+  max-width: 900px;  
+  height: 100dvh;  
+  margin: auto;  
+  display: flex;  
+  flex-direction: column;  
+  background: white;  
+  position: relative;  
+}  
+  
+/* HEADER */  
+  
+.header {  
+  min-height: 68px;  
+  display: flex;  
+  align-items: center;  
+  gap: 12px;  
+  padding: 10px 15px;  
+  color: white;  
+  background: #101820;  
+  border-bottom: 1px solid #26323e;  
+}  
+  
+.back-button {  
+  border: none;  
+  background: transparent;  
+  color: white;  
+  font-size: 25px;  
+  padding: 5px;  
+}  
+  
+.avatar {  
+  width: 43px;  
+  height: 43px;  
+  flex-shrink: 0;  
+  border-radius: 50%;  
+  object-fit: cover;  
+  background: #25374a;  
+}  
+  
+.avatar-placeholder {  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  color: white;  
+  font-weight: bold;  
+  font-size: 18px;  
+}  
+  
+.user-info {  
+  min-width: 0;  
+  flex: 1;  
+}  
+  
+.user-name {  
+  font-size: 16px;  
+  font-weight: 700;  
+  overflow-wrap: anywhere;  
+}  
+  
+.user-status {  
+  margin-top: 4px;  
+  font-size: 12px;  
+  color: #b9c6d3;  
+}  
+  
+.header-button {  
+  border: none;  
+  background: transparent;  
+  color: white;  
+  padding: 8px;  
+  font-size: 19px;  
+}  
+  
+/* NOTICES */  
+  
+.notice {  
+  display: none;  
+  padding: 10px 14px;  
+  font-size: 13px;  
+  line-height: 1.5;  
+  overflow-wrap: anywhere;  
+}  
+  
+.notice.show {  
+  display: block;  
+}  
+  
+.notice.error {  
+  background: #fff0f0;  
+  color: #a52222;  
+}  
+  
+.notice.success {  
+  background: #e8fff0;  
+  color: #116b37;  
+}  
+  
+.notice.info {  
+  background: #eaf4ff;  
+  color: #155ca8;  
+}  
+  
+/* MESSAGES */  
+  
+.messages {  
+  flex: 1;  
+  overflow-y: auto;  
+  padding: 16px 12px;  
+  display: flex;  
+  flex-direction: column;  
+  gap: 10px;  
+  background-color: #edf2f6;  
+  background-image: radial-gradient(  
+    rgba(90, 110, 130, 0.07) 0.7px,  
+    transparent 0.7px  
+  );  
+  background-size: 18px 18px;  
+  overscroll-behavior: contain;  
+}  
+  
+.empty-state {  
+  margin: auto;  
+  max-width: 280px;  
+  text-align: center;  
+  padding: 25px;  
+  background: rgba(255, 255, 255, 0.92);  
+  border-radius: 16px;  
+  color: var(--muted);  
+  line-height: 1.6;  
+}  
+  
+.message-row {  
+  display: flex;  
+  width: 100%;  
+}  
+  
+.message-row.mine {  
+  justify-content: flex-end;  
+}  
+  
+.message-row.theirs {  
+  justify-content: flex-start;  
+}  
+  
+.bubble {  
+  position: relative;  
+  max-width: 82%;  
+  min-width: 75px;  
+  padding: 9px 10px 7px;  
+  border-radius: 13px;  
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);  
+  overflow-wrap: anywhere;  
+}  
+  
+.mine .bubble {  
+  background: var(--outgoing);  
+  border-top-right-radius: 3px;  
+}  
+  
+.theirs .bubble {  
+  background: var(--incoming);  
+  border-top-left-radius: 3px;  
+}  
+  
+.message-text {  
+  font-size: 15px;  
+  line-height: 1.5;  
+  white-space: pre-wrap;  
+  overflow-wrap: anywhere;  
+}  
+  
+.message-meta {  
+  display: flex;  
+  align-items: center;  
+  justify-content: flex-end;  
+  gap: 5px;  
+  margin-top: 5px;  
+  font-size: 10px;  
+  color: #62716c;  
+}  
+  
+.read-status {  
+  font-size: 12px;  
+  color: #1685ff;  
+}  
+  
+.message-actions {  
+  display: flex;  
+  justify-content: flex-end;  
+  margin-top: 4px;  
+}  
+  
+.reply-button {  
+  border: none;  
+  background: transparent;  
+  color: #647585;  
+  font-size: 11px;  
+  padding: 3px;  
+}  
+  
+.reply-preview {  
+  padding: 7px 9px;  
+  margin-bottom: 7px;  
+  border-left: 3px solid var(--blue);  
+  background: rgba(70, 100, 130, 0.09);  
+  border-radius: 4px;  
+  cursor: pointer;  
+}  
+  
+.reply-author {  
+  font-size: 11px;  
+  font-weight: bold;  
+  color: #1475ce;  
+  margin-bottom: 3px;  
+}  
+  
+.reply-content {  
+  font-size: 12px;  
+  color: #566473;  
+  white-space: pre-wrap;  
+  overflow-wrap: anywhere;  
+}  
+  
+/* IMAGE ATTACHMENTS */  
+  
+.chat-image {  
+  display: block;  
+  width: auto;  
+  max-width: 100%;  
+  max-height: 350px;  
+  min-height: 30px;  
+  object-fit: contain;  
+  border-radius: 9px;  
+  margin: 4px 0;  
+  cursor: pointer;  
+}  
+  
+.image-fallback {  
+  font-size: 12px;  
+  padding: 10px;  
+  background: #fff0f0;  
+  color: #a52222;  
+  border-radius: 8px;  
+}  
+  
+/* VIDEO */  
+  
+.chat-video {  
+  display: block;  
+  width: 100%;  
+  max-width: 360px;  
+  max-height: 350px;  
+  border-radius: 9px;  
+  background: black;  
+  margin: 4px 0;  
+}  
+  
+/* AUDIO */  
+  
+.audio-player {  
+  display: block;  
+  width: 280px;  
+  max-width: 100%;  
+  margin: 5px 0;  
+}  
+  
+.audio-label {  
+  font-size: 12px;  
+  margin-bottom: 5px;  
+  color: #566473;  
+}  
+  
+/* FILES */  
+  
+.file-card {  
+  display: flex;  
+  align-items: center;  
+  gap: 10px;  
+  padding: 12px;  
+  min-width: 180px;  
+  background: rgba(255, 255, 255, 0.7);  
+  border-radius: 9px;  
+  text-decoration: none;  
+  color: #17212b;  
+}  
+  
+.file-icon {  
+  font-size: 26px;  
+}  
+  
+.file-details {  
+  min-width: 0;  
+  flex: 1;  
+}  
+  
+.file-name {  
+  font-size: 13px;  
+  font-weight: bold;  
+  overflow-wrap: anywhere;  
+}  
+  
+.file-hint {  
+  font-size: 11px;  
+  color: #65717e;  
+  margin-top: 4px;  
+}  
+  
+/* COMPOSER */  
+  
+.reply-bar {  
+  display: none;  
+  padding: 9px 12px;  
+  background: #f0f5fa;  
+  border-top: 1px solid var(--border);  
+  align-items: center;  
+  gap: 10px;  
+}  
+  
+.reply-bar.active {  
+  display: flex;  
+}  
+  
+.reply-bar-content {  
+  flex: 1;  
+  min-width: 0;  
+  border-left: 3px solid var(--blue);  
+  padding-left: 9px;  
+}  
+  
+.reply-bar-title {  
+  font-size: 12px;  
+  font-weight: bold;  
+  color: var(--blue);  
+}  
+  
+.reply-bar-text {  
+  margin-top: 3px;  
+  font-size: 12px;  
+  color: #596877;  
+  white-space: nowrap;  
+  overflow: hidden;  
+  text-overflow: ellipsis;  
+}  
+  
+.cancel-reply {  
+  border: none;  
+  background: transparent;  
+  font-size: 22px;  
+  color: #647585;  
+}  
+  
+.composer {  
+  display: flex;  
+  align-items: flex-end;  
+  gap: 7px;  
+  padding: 10px;  
+  background: white;  
+  border-top: 1px solid var(--border);  
+}  
+  
+.composer-button {  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  flex-shrink: 0;  
+  width: 42px;  
+  height: 42px;  
+  border: none;  
+  border-radius: 50%;  
+  background: transparent;  
+  color: #526171;  
+  font-size: 23px;  
+}  
+  
+.composer-button:active {  
+  background: #edf3f8;  
+}  
+  
+.message-input {  
+  flex: 1;  
+  min-width: 0;  
+  min-height: 42px;  
+  max-height: 120px;  
+  resize: none;  
+  border: none;  
+  outline: none;  
+  border-radius: 22px;  
+  padding: 12px 15px;  
+  background: #f0f3f6;  
+  color: var(--text);  
+  font-size: 15px;  
+}  
+  
+.send-button {  
+  background: var(--blue);  
+  color: white;  
+  font-size: 19px;  
+}  
+  
+.recording {  
+  background: #ffe6e6 !important;  
+  color: #d32626 !important;  
+  animation: pulse 1s infinite;  
+}  
+  
+@keyframes pulse {  
+  50% {  
+    opacity: 0.55;  
+  }  
+}  
+  
+.hidden {  
+  display: none !important;  
+}  
+  
+.loading {  
+  margin: auto;  
+  color: #657585;  
+  text-align: center;  
+  padding: 20px;  
+}  
+  
+/* IMAGE VIEWER */  
+  
+.image-viewer {  
+  display: none;  
+  position: fixed;  
+  inset: 0;  
+  z-index: 1000;  
+  background: rgba(0, 0, 0, 0.94);  
+  align-items: center;  
+  justify-content: center;  
+  padding: 20px;  
+}  
+  
+.image-viewer.active {  
+  display: flex;  
+}  
+  
+.image-viewer img {  
+  max-width: 100%;  
+  max-height: 90dvh;  
+  object-fit: contain;  
+}  
+  
+.viewer-close {  
+  position: absolute;  
+  top: 15px;  
+  right: 18px;  
+  font-size: 30px;  
+  color: white;  
+  background: transparent;  
+  border: none;  
+}  
+  
+/* MOBILE */  
+  
+@media (max-width: 480px) {  
+  .header {  
+    min-height: 62px;  
+    padding: 8px 10px;  
+  }  
+  
+  .messages {  
+    padding: 12px 8px;  
+  }  
+  
+  .bubble {  
+    max-width: 88%;  
+  }  
+  
+  .composer {  
+    padding: 7px 5px;  
+    gap: 3px;  
+  }  
+  
+  .composer-button {  
+    width: 38px;  
+    height: 40px;  
+  }  
+  
+  .message-input {  
+    font-size: 16px;  
+  }  
+}  
+</style>  </head>  <body>  <div class="app">    <header class="header">  <button  
+  class="back-button"  
+  id="backButton"  
+  aria-label="Go back"  
+  type="button"  
+>‹</button>  
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<div id="avatarContainer"></div>  
 
-  <title>Glo-Tube Chat</title>
+<div class="user-info">  
+  <div class="user-name" id="userName">Loading conversation...</div>  
+  <div class="user-status" id="userStatus">Glo-Tube Messages</div>  
+</div>  
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
+<button  
+  class="header-button"  
+  id="refreshButton"  
+  type="button"  
+  title="Refresh messages"  
+  aria-label="Refresh messages"  
+>↻</button>
 
-  <style>
-    * {
-      box-sizing: border-box;
+  </header>    <div class="notice" id="notice"></div>    <main class="messages" id="messages">  
+    <div class="loading">Loading messages...</div>  
+  </main>    <div class="reply-bar" id="replyBar">  <div class="reply-bar-content">  
+  <div class="reply-bar-title" id="replyBarTitle">  
+    Replying to message  
+  </div>  
+
+  <div class="reply-bar-text" id="replyBarText"></div>  
+</div>  
+
+<button  
+  class="cancel-reply"  
+  id="cancelReply"  
+  type="button"  
+  aria-label="Cancel reply"  
+>×</button>
+
+  </div>    <form class="composer" id="composer">  <button  
+  class="composer-button"  
+  type="button"  
+  id="attachmentButton"  
+  aria-label="Attach a file"  
+  title="Attach a file"  
+>＋</button>  
+
+<input  
+  type="file"  
+  id="fileInput"  
+  class="hidden"  
+  accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip"  
+>  
+
+<textarea  
+  id="messageInput"  
+  class="message-input"  
+  rows="1"  
+  placeholder="Message..."  
+  aria-label="Message"  
+></textarea>  
+
+<button  
+  class="composer-button"  
+  type="button"  
+  id="voiceButton"  
+  aria-label="Record voice message"  
+  title="Tap to start recording"  
+>🎤</button>  
+
+<button  
+  class="composer-button send-button"  
+  type="submit"  
+  id="sendButton"  
+  aria-label="Send message"  
+  title="Send message"  
+>➤</button>
+
+  </form>  </div>  <div class="image-viewer" id="imageViewer">  
+  <button class="viewer-close" id="viewerClose" type="button">×</button>  
+  <img id="viewerImage" alt="Full-size attachment">  
+</div>  <!-- Load the Supabase library BEFORE supabase.js -->  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <script src="supabase.js"></script>  <script>  
+(function () {  
+  "use strict";  
+  
+  const BUCKET = "chat-attachments";  
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;  
+  const REFRESH_INTERVAL = 5000;  
+  
+  const supabaseClient = window.supabaseClient;  
+  
+  const params = new URLSearchParams(window.location.search);  
+  
+  const otherUserId =  
+    params.get("user") ||  
+    params.get("user_id") ||  
+    params.get("id");  
+  
+  const elements = {  
+    messages: document.getElementById("messages"),  
+    userName: document.getElementById("userName"),  
+    userStatus: document.getElementById("userStatus"),  
+    avatarContainer: document.getElementById("avatarContainer"),  
+    notice: document.getElementById("notice"),  
+    composer: document.getElementById("composer"),  
+    input: document.getElementById("messageInput"),  
+    send: document.getElementById("sendButton"),  
+    fileInput: document.getElementById("fileInput"),  
+    attachment: document.getElementById("attachmentButton"),  
+    voice: document.getElementById("voiceButton"),  
+    refresh: document.getElementById("refreshButton"),  
+    back: document.getElementById("backButton"),  
+    replyBar: document.getElementById("replyBar"),  
+    replyBarTitle: document.getElementById("replyBarTitle"),  
+    replyBarText: document.getElementById("replyBarText"),  
+    cancelReply: document.getElementById("cancelReply"),  
+    imageViewer: document.getElementById("imageViewer"),  
+    viewerImage: document.getElementById("viewerImage"),  
+    viewerClose: document.getElementById("viewerClose")  
+  };  
+  
+  let currentUser = null;  
+  let otherUser = null;  
+  let replyTo = null;  
+  let allMessages = [];  
+  let isSending = false;  
+  let isRefreshing = false;  
+  let refreshTimer = null;  
+  let recorder = null;  
+  let recordingChunks = [];  
+  let recordingStream = null;  
+  let recordingStartedAt = 0;  
+  let isRecording = false;  
+  let noticeTimer = null;  
+  
+  /*  
+   * UTILITIES  
+   */  
+  
+  function showNotice(message, type) {  
+    clearTimeout(noticeTimer);  
+  
+    elements.notice.textContent = message;  
+    elements.notice.className =  
+      "notice show " + (type || "info");  
+  
+    noticeTimer = setTimeout(function () {  
+      elements.notice.className = "notice";  
+    }, 6000);  
+  }  
+  
+  function escapeHtml(value) {  
+    return String(value == null ? "" : value)  
+      .replace(/&/g, "&amp;")  
+      .replace(/</g, "&lt;")  
+      .replace(/>/g, "&gt;")  
+      .replace(/"/g, "&quot;")  
+      .replace(/'/g, "&#039;");  
+  }  
+  
+  function getDisplayName(profile) {  
+    if (!profile) return "User";  
+  
+    const fullName = [  
+      profile.first_name,  
+      profile.last_name  
+    ].filter(Boolean).join(" ").trim();  
+  
+    return (  
+      fullName ||  
+      profile.username ||  
+      "User"  
+    );  
+  }  
+  
+  function getInitials(name) {  
+    return String(name || "U")  
+      .trim()  
+      .charAt(0)  
+      .toUpperCase();  
+  }  
+  
+  function getMessagePreview(message) {  
+    if (!message) return "";  
+  
+    if (message.message) {  
+      return String(message.message);  
+    }  
+  
+    switch (message.message_type) {  
+      case "image":  
+        return "📷 Image";  
+  
+      case "video":  
+        return "🎬 Video";  
+  
+      case "audio":  
+      case "voice":  
+        return "🎤 Voice message";  
+  
+      case "file":  
+        return "📎 " + (  
+          message.attachment_name || "Attachment"  
+        );  
+  
+      default:  
+        return "Message";  
+    }  
+  }  
+  
+  function formatTime(value) {  
+    if (!value) return "";  
+  
+    const date = new Date(value);  
+  
+    if (Number.isNaN(date.getTime())) {  
+      return "";  
+    }  
+  
+    return date.toLocaleTimeString([], {  
+      hour: "2-digit",  
+      minute: "2-digit"  
+    });  
+  }  
+  
+  function scrollToBottom(force) {  
+    const container = elements.messages;  
+  
+    if (!container) return;  
+  
+    if (force) {  
+      container.scrollTop = container.scrollHeight;  
+    }  
+  }  
+  
+  function sameId(a, b) {  
+    return String(a) === String(b);  
+  }  
+  
+  function findMessage(id) {  
+    if (id == null) return null;  
+  
+    return allMessages.find(function (message) {  
+      return sameId(message.id, id);  
+    }) || null;  
+  }  
+  
+  function setBusy(busy) {  
+    isSending = busy;  
+  
+    elements.send.disabled = busy;  
+    elements.attachment.disabled = busy;  
+  }  
+  
+  /*  
+   * PROFILE LOADING  
+   */  
+  
+  async function loadOtherProfile() {  
+    const { data, error } = await supabaseClient  
+      .from("profiles")  
+      .select("id, username, first_name, last_name, profile_photo")  
+      .eq("id", otherUserId)  
+      .maybeSingle();  
+  
+    if (error) {  
+      console.error("Profile loading error:", error);  
+  
+      elements.userName.textContent = "Conversation";  
+  
+      return;  
+    }  
+  
+    otherUser = data;  
+  
+    const name = getDisplayName(otherUser);  
+  
+    elements.userName.textContent = name;  
+  
+    elements.avatarContainer.replaceChildren();  
+  
+    const avatar = document.createElement("div");  
+    avatar.className = "avatar avatar-placeholder";  
+    avatar.textContent = getInitials(name);  
+  
+    if (otherUser && otherUser.profile_photo) {  
+      const image = document.createElement("img");  
+  
+      image.className = "avatar";  
+      image.alt = name;  
+      image.src = otherUser.profile_photo;  
+  
+      image.onerror = function () {  
+        elements.avatarContainer.replaceChildren(avatar);  
+      };  
+  
+      elements.avatarContainer.appendChild(image);  
+    } else {  
+      elements.avatarContainer.appendChild(avatar);  
+    }  
+  
+    elements.userStatus.textContent = "Glo-Tube Messages";  
+  }  
+  
+  /*  
+   * REPLY MANAGEMENT  
+   */  
+  
+  function startReply(message) {  
+    replyTo = message;  
+  
+    const author = sameId(message.sender_id, currentUser.id)  
+      ? "You"  
+      : getDisplayName(otherUser);  
+  
+    elements.replyBarTitle.textContent =  
+      "Replying to " + author;  
+  
+    elements.replyBarText.textContent =  
+      getMessagePreview(message);  
+  
+    elements.replyBar.classList.add("active");  
+  
+    elements.input.focus();  
+  }  
+  
+  function cancelReply() {  
+    replyTo = null;  
+  
+    elements.replyBar.classList.remove("active");  
+    elements.replyBarText.textContent = "";  
+  }  
+  
+  elements.cancelReply.addEventListener("click", cancelReply);  
+  
+  /*  
+   * ATTACHMENT URLS  
+   *  
+   * This bucket is PUBLIC.  
+   * attachment_url stores the complete public URL.  
+   */  
+  
+  function getPublicAttachmentUrl(filePath) {  
+    const { data } = supabaseClient.storage  
+      .from(BUCKET)  
+      .getPublicUrl(filePath);  
+  
+    return data.publicUrl;  
+  }  
+  
+  /*  
+   * MESSAGE SENDING  
+   */  
+  
+  async function insertMessage(messageData) {  
+    const { data, error } = await supabaseClient  
+      .from("messages")  
+      .insert(messageData)  
+      .select()  
+      .single();  
+  
+    if (error) {  
+      console.error("Message insert error:", error);  
+      throw error;  
+    }  
+  
+    return data;  
+  }  
+  
+  async function sendTextMessage(event) {  
+    event.preventDefault();  
+  
+    if (isSending) return;  
+  
+    const text = elements.input.value.trim();  
+  
+    if (!text) return;  
+  
+    if (!currentUser || !otherUserId) {  
+      showNotice("Please log in and open a conversation.", "error");  
+      return;  
+    }  
+  
+    setBusy(true);  
+  
+    try {  
+      const payload = {  
+        sender_id: currentUser.id,  
+        receiver_id: otherUserId,  
+        message: text,  
+        message_type: "text"  
+      };  
+  
+      if (replyTo) {  
+        payload.reply_to = replyTo.id;  
+      }  
+  
+      await insertMessage(payload);  
+  
+      elements.input.value = "";  
+      elements.input.style.height = "42px";  
+  
+      cancelReply();  
+  
+      await loadMessages(true);  
+  
+    } catch (error) {  
+      showNotice(  
+        "Message could not be sent: " +  
+        (error.message || "Check your database policies."),  
+        "error"  
+      );  
+    } finally {  
+      setBusy(false);  
+      elements.input.focus();  
+    }  
+  }  
+  
+  elements.composer.addEventListener("submit", sendTextMessage);  
+  
+  /*  
+   * FILE UPLOAD  
+   */  
+  
+  function getAttachmentKind(file) {  
+    const type = file.type || "";  
+  
+    if (type.startsWith("image/")) return "image";  
+    if (type.startsWith("video/")) return "video";  
+    if (type.startsWith("audio/")) return "audio";  
+  
+    return "file";  
+  }  
+  
+  function makeSafeFileName(name) {  
+    return String(name || "attachment")  
+      .replace(/[^\w.\-() ]/g, "_")  
+      .replace(/\s+/g, "_")  
+      .slice(0, 150);  
+  }  
+  
+  async function uploadAttachment(file, forcedType) {  
+    if (!file) return;  
+  
+    if (file.size > MAX_FILE_SIZE) {  
+            showNotice(
+        "This file is larger than 25 MB. Choose a smaller file.",
+        "error"
+      );
+      return;
     }
 
-    :root {
-      --blue: #087cff;
-      --background: #f4f7fb;
-      --border: #e6ebf2;
-      --text: #172033;
-      --muted: #758197;
-      --sent: #dceeff;
-      --received: #ffffff;
+    if (!currentUser || !otherUserId) {
+      showNotice("Please log in and open a conversation.", "error");
+      return;
     }
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--background);
-      color: var(--text);
-      height: 100dvh;
-    }
-
-    button,
-    input,
-    textarea {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-    }
-
-    .app {
-      height: 100dvh;
-      max-width: 760px;
-      margin: auto;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* HEADER */
-
-    .top {
-      height: 68px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      background: #fff;
-      flex-shrink: 0;
-    }
-
-    .back {
-      font-size: 28px;
-      background: transparent;
-      color: var(--blue);
-      padding: 4px;
-    }
-
-    .avatar {
-      height: 42px;
-      width: 42px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: #e8f2ff;
-      display: grid;
-      place-items: center;
-      color: var(--blue);
-      font-weight: bold;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .person {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .person strong {
-      display: block;
-      font-size: 16px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .status {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .head-action {
-      background: #f1f6fc;
-      color: #23527c;
-      border-radius: 50%;
-      width: 38px;
-      height: 38px;
-      font-size: 20px;
-    }
-
-    /* NOTICE */
-
-    .notice {
-      padding: 8px 12px;
-      font-size: 12px;
-      text-align: center;
-      color: #2471b8;
-      background: #edf6ff;
-      display: none;
-      overflow-wrap: anywhere;
-    }
-
-    .notice.show {
-      display: block;
-    }
-
-    /* MESSAGE AREA */
-
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 18px 12px 12px;
-      background-color: #f6f8fb;
-      background-image:
-        radial-gradient(#dce5f0 0.6px, transparent 0.6px);
-      background-size: 15px 15px;
-      scroll-behavior: smooth;
-    }
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      margin: 35px auto;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    /* MESSAGE ROWS */
-
-    .row {
-      display: flex;
-      margin: 12px 0;
-      align-items: flex-end;
-      gap: 6px;
-    }
-
-    .row.mine {
-      justify-content: flex-end;
-    }
-
-    .bubble {
-      max-width: min(82%, 520px);
-      padding: 9px 10px 6px;
-      border-radius: 15px;
-      background: var(--received);
-      box-shadow: 0 1px 2px #16233b12;
-      overflow-wrap: anywhere;
-      position: relative;
-    }
-
-    .mine .bubble {
-      background: var(--sent);
-      border-bottom-right-radius: 4px;
-    }
-
-    .row:not(.mine) .bubble {
-      border-bottom-left-radius: 4px;
-    }
-
-    .msg-text {
-      white-space: pre-wrap;
-      line-height: 1.45;
-      font-size: 15px;
-    }
-
-    /* MESSAGE TIME */
-
-    .meta {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      color: #77849a;
-      margin-top: 5px;
-    }
-
-    .ticks {
-      color: #1685df;
-      font-size: 13px;
-    }
-
-    /* REPLY PREVIEW */
-
-    .reply-quote {
-      border-left: 3px solid var(--blue);
-      padding: 7px 9px;
-      background: #e9f2fc;
-      border-radius: 5px;
-      margin-bottom: 7px;
-      font-size: 12px;
-      color: #43536a;
-    }
-
-    .reply-quote b {
-      display: block;
-      color: #1269bd;
-      margin-bottom: 3px;
-    }
-
-    /* MESSAGE ACTIONS */
-
-    .msg-tools {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 5px;
-      justify-content: flex-end;
-    }
-
-    .tool {
-      background: #ffffffb8;
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      padding: 4px 9px;
-      font-size: 11px;
-      color: #42516a;
-    }
-
-    /* MEDIA */
-
-    .media {
-      max-width: 100%;
-      max-height: 320px;
-      border-radius: 9px;
-      display: block;
-      margin: 2px 0 5px;
-    }
-
-    .audio-player {
-      width: min(260px, 65vw);
-      display: block;
-    }
-
-    .file-card {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding: 10px;
-      background: #f0f5fb;
-      border-radius: 8px;
-      color: #23415e;
-      text-decoration: none;
-    }
-
-    .file-icon {
-      font-size: 25px;
-    }
-
-    /* REPLY BAR */
-
-    .reply-bar {
-      display: none;
-      align-items: center;
-      gap: 9px;
-      padding: 9px 14px;
-      background: #f3f8ff;
-      border-top: 1px solid var(--border);
-    }
-
-    .reply-bar.show {
-      display: flex;
-    }
-
-    .reply-copy {
-      flex: 1;
-      min-width: 0;
-      font-size: 12px;
-      color: #65738a;
-    }
-
-    .reply-copy b {
-      display: block;
-      color: #1672ce;
-      margin-bottom: 3px;
-    }
-
-    .reply-copy span {
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .cancel {
-      background: transparent;
-      color: #718096;
-      font-size: 23px;
-    }
-
-    /* MESSAGE COMPOSER */
-
-    .composer {
-      padding: 10px;
-      display: flex;
-      gap: 7px;
-      align-items: flex-end;
-      border-top: 1px solid var(--border);
-      background: #fff;
-    }
-
-    .icon-btn {
-      width: 42px;
-      height: 42px;
-      flex-shrink: 0;
-      border-radius: 50%;
-      background: #f0f5fb;
-      color: #2471b8;
-      font-size: 19px;
-      display: grid;
-      place-items: center;
-    }
-
-    .icon-btn:disabled {
-      opacity: .45;
-      cursor: default;
-    }
-
-    .input-wrap {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: flex-end;
-      background: #f3f6fa;
-      border-radius: 22px;
-      padding: 5px 12px;
-    }
-
-    .input-wrap textarea {
-      border: 0;
-      outline: 0;
-      background: transparent;
-      resize: none;
-      max-height: 120px;
-      min-height: 30px;
-      flex: 1;
-      padding: 7px 0;
-      line-height: 1.35;
-      color: var(--text);
-    }
-
-    .send {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: var(--blue);
-      color: #fff;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .send:disabled {
-      opacity: .5;
-    }
-
-    .recording {
-      font-size: 12px;
-      color: #d63031;
-      align-self: center;
-      white-space: nowrap;
-      display: none;
-    }
-
-    .recording.show {
-      display: block;
-    }
-
-    @media (min-width: 600px) {
-      body {
-        padding: 12px 0;
-      }
-
-      .app {
-        height: calc(100dvh - 24px);
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 0 35px #14213d0d;
-      }
-
-      .top {
-        padding: 12px 18px;
-      }
-
-      #messages {
-        padding: 22px 20px;
-      }
-
-      .composer {
-        padding: 12px 16px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="app">
-
-  <!-- CHAT HEADER -->
-
-  <header class="top">
-
-    <button
-      class="back"
-      id="backBtn"
-      aria-label="Go back">
-      ‹
-    </button>
-
-    <div class="avatar" id="avatar">G</div>
-
-    <div class="person">
-
-      <strong id="personName">
-        Glo-Tube User
-      </strong>
-
-      <div class="status" id="status">
-        Glo-Tube messages
-      </div>
-
-    </div>
-
-    <button
-      class="head-action"
-      id="refreshBtn"
-      title="Refresh messages">
-      ↻
-    </button>
-
-  </header>
-
-  <div class="notice" id="notice"></div>
-
-  <!-- MESSAGES -->
-
-  <main id="messages" aria-live="polite">
-
-    <div class="empty">
-      Loading conversation...
-    </div>
-
-  </main>
-
-  <!-- REPLY PREVIEW -->
-
-  <div class="reply-bar" id="replyBar">
-
-    <div class="reply-copy">
-
-      <b id="replyName">
-        Replying
-      </b>
-
-      <span id="replyText"></span>
-
-    </div>
-
-    <button
-      class="cancel"
-      id="cancelReply"
-      aria-label="Cancel reply">
-      ×
-    </button>
-
-  </div>
-
-  <!-- MESSAGE INPUT -->
-
-  <form class="composer" id="composer">
-
-    <button
-      type="button"
-      class="icon-btn"
-      id="attachBtn"
-      title="Attach a file">
-      ＋
-    </button>
-
-    <input
-      id="fileInput"
-      type="file"
-      hidden
-      accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip">
-
-    <div class="input-wrap">
-
-      <textarea
-        id="messageInput"
-        placeholder="Message"
-        rows="1"
-        aria-label="Write a message"></textarea>
-
-      <span class="recording" id="recordingLabel">
-        ● Recording
-      </span>
-
-    </div>
-
-    <button
-      type="button"
-      class="icon-btn"
-      id="voiceBtn"
-      title="Record voice message">
-      🎙
-    </button>
-
-    <button
-      class="send"
-      id="sendBtn"
-      type="submit"
-      title="Send message">
-      ➤
-    </button>
-
-  </form>
-
-</div>
-
-<script>
-(() => {
-
-  "use strict";
-
-  const $ = id => document.getElementById(id);
-
-  /*
-    IMPORTANT:
-
-    supabase.js must expose the initialized client
-    as window.supabaseClient.
-
-    Example:
-    window.supabaseClient =
-      window.supabase.createClient(URL, KEY);
-  */
-
-  const client = window.supabaseClient;
-
-  const showNotice = (message, warning = false) => {
-
-    const notice = $("notice");
-
-    notice.textContent = message;
-
-    notice.style.color = warning
-      ? "#b42318"
-      : "#2471b8";
-
-    notice.classList.add("show");
-
-    setTimeout(() => {
-      notice.classList.remove("show");
-    }, 5000);
-
-  };
-
-  if (!client || typeof client.from !== "function") {
-
-    $("messages").innerHTML = `
-      <div class="empty">
-        <b>Supabase is not connected.</b><br><br>
-        Check your supabase.js file and make sure
-        it creates window.supabaseClient.
-      </div>
-    `;
-
-    return;
-
-  }
-
-  let currentUser = null;
-  let otherId = null;
-  let otherProfile = null;
-
-  let lastIds = new Set();
-  let replyTo = null;
-
-  let mediaRecorder = null;
-  let recordingStream = null;
-  let chunks = [];
-
-  let pollTimer = null;
-
-  const params = new URLSearchParams(location.search);
-
-  otherId =
-    params.get("user") ||
-    params.get("user_id") ||
-    params.get("id");
-
-  /* Escape HTML before displaying database content. */
-
-  function escapeHtml(value) {
-
-    return String(value ?? "").replace(
-      /[&<>"']/g,
-      character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[character]
-    );
-
-  }
-
-  function formatTime(value) {
-
-    if (!value) return "";
-
-    const date = new Date(value);
-
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-
-  }
-
-  function messageText(message) {
-
-    return message.message ||
-      message.content ||
-      "";
-
-  }
-
-  function profileName(profile) {
-
-    if (!profile) {
-      return "Glo-Tube User";
-    }
-
-    if (profile.username) {
-      return "@" + profile.username;
-    }
-
-    return [
-      profile.first_name,
-      profile.last_name
-    ].filter(Boolean).join(" ") || "Glo-Tube User";
-
-  }
-
-  /* START CHAT */
-
-  async function init() {
+    setBusy(true);
+    showNotice("Uploading attachment...", "info");
 
     try {
+      const attachmentKind = forcedType || getAttachmentKind(file);
 
-      const {
-        data: { session },
-        error
-      } = await client.auth.getSession();
+      const safeName = makeSafeFileName(file.name || "voice-message.webm");
+
+      const filePath =
+        currentUser.id + "/" +
+        Date.now() + "_" +
+        Math.random().toString(36).slice(2, 10) + "_" +
+        safeName;
+
+      const { data: uploadedFile, error: uploadError } =
+        await supabaseClient.storage
+          .from(BUCKET)
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type || "application/octet-stream"
+          });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const publicUrl = getPublicAttachmentUrl(uploadedFile.path);
+
+      const payload = {
+        sender_id: currentUser.id,
+        receiver_id: otherUserId,
+        message: "",
+        message_type: attachmentKind,
+        attachment_url: publicUrl,
+        attachment_name: safeName,
+        attachment_type: file.type || "application/octet-stream"
+      };
+
+      if (replyTo) {
+        payload.reply_to = replyTo.id;
+      }
+
+      await insertMessage(payload);
+
+      cancelReply();
+
+      showNotice("Attachment sent successfully.", "success");
+
+      await loadMessages(true);
+
+    } catch (error) {
+      console.error("Attachment upload error:", error);
+
+      showNotice(
+        "Could not send attachment: " +
+        (error.message || "Check your Storage permissions and database policies."),
+        "error"
+      );
+
+    } finally {
+      setBusy(false);
+      elements.fileInput.value = "";
+    }
+  }
+
+  elements.attachment.addEventListener("click", function () {
+    elements.fileInput.click();
+  });
+
+  elements.fileInput.addEventListener("change", async function () {
+    const file = elements.fileInput.files &&
+      elements.fileInput.files[0];
+
+    if (!file) return;
+
+    await uploadAttachment(file);
+  });
+
+  /*
+   * VOICE MESSAGE RECORDING
+   */
+
+  function stopRecordingTracks() {
+    if (recordingStream) {
+      recordingStream.getTracks().forEach(function (track) {
+        track.stop();
+      });
+
+      recordingStream = null;
+    }
+  }
+
+  function getSupportedAudioMimeType() {
+    if (!window.MediaRecorder) return "";
+
+    const types = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+      "audio/ogg;codecs=opus"
+    ];
+
+    for (const type of types) {
+      if (
+        typeof MediaRecorder.isTypeSupported === "function" &&
+        MediaRecorder.isTypeSupported(type)
+      ) {
+        return type;
+      }
+    }
+
+    return "";
+  }
+
+  async function startVoiceRecording() {
+    if (isRecording || isSending) return;
+
+    if (!navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia ||
+        !window.MediaRecorder) {
+      showNotice(
+        "Voice recording is not supported in this browser. Open Glo-Tube using HTTPS in a supported browser.",
+        "error"
+      );
+      return;
+    }
+
+    if (!currentUser || !otherUserId) {
+      showNotice(
+        "Please log in and open a conversation first.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      recordingStream = await navigator.mediaDevices.getUserMedia({
+        audio: true
+      });
+
+      const mimeType = getSupportedAudioMimeType();
+
+      recorder = mimeType
+        ? new MediaRecorder(recordingStream, { mimeType: mimeType })
+        : new MediaRecorder(recordingStream);
+
+      recordingChunks = [];
+      recordingStartedAt = Date.now();
+      isRecording = true;
+
+      elements.voice.classList.add("recording");
+      elements.voice.textContent = "■";
+      elements.voice.title = "Tap to stop and send voice message";
+      elements.voice.setAttribute("aria-label", "Stop recording");
+
+      showNotice(
+        "Recording voice message. Tap the red button to stop and send.",
+        "info"
+      );
+
+      recorder.addEventListener("dataavailable", function (event) {
+        if (event.data && event.data.size > 0) {
+          recordingChunks.push(event.data);
+        }
+      });
+
+      recorder.addEventListener("stop", async function () {
+        const elapsed = Date.now() - recordingStartedAt;
+
+        isRecording = false;
+
+        elements.voice.classList.remove("recording");
+        elements.voice.textContent = "🎤";
+        elements.voice.title = "Record voice message";
+        elements.voice.setAttribute(
+          "aria-label",
+          "Record voice message"
+        );
+
+        stopRecordingTracks();
+
+        if (!recordingChunks.length || elapsed < 500) {
+          showNotice(
+            "Voice message was too short. Please record again.",
+            "error"
+          );
+          return;
+        }
+
+        const actualType =
+          recorder && recorder.mimeType
+            ? recorder.mimeType
+            : "audio/webm";
+
+        const extension = actualType.includes("mp4")
+          ? "m4a"
+          : actualType.includes("ogg")
+            ? "ogg"
+            : "webm";
+
+        const voiceBlob = new Blob(recordingChunks, {
+          type: actualType
+        });
+
+        const voiceFile = new File(
+          [voiceBlob],
+          "voice-message-" + Date.now() + "." + extension,
+          { type: actualType }
+        );
+
+        recordingChunks = [];
+
+        await uploadAttachment(voiceFile, "voice");
+      });
+
+      recorder.start();
+
+    } catch (error) {
+      console.error("Voice recording error:", error);
+
+      isRecording = false;
+      stopRecordingTracks();
+
+      elements.voice.classList.remove("recording");
+      elements.voice.textContent = "🎤";
+      elements.voice.title = "Record voice message";
+
+      showNotice(
+        "Could not access your microphone. Allow microphone permission and try again.",
+        "error"
+      );
+    }
+  }
+
+  function stopVoiceRecording() {
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    }
+  }
+
+  elements.voice.addEventListener("click", function () {
+    if (isRecording) {
+      stopVoiceRecording();
+    } else {
+      startVoiceRecording();
+    }
+  });
+
+  /*
+   * MESSAGE ATTACHMENT DISPLAY
+   */
+
+  function createAttachment(message) {
+    const url = message.attachment_url;
+
+    if (!url) {
+      const unavailable = document.createElement("div");
+      unavailable.className = "image-fallback";
+      unavailable.textContent = "This attachment is unavailable.";
+      return unavailable;
+    }
+
+    const type = message.message_type;
+    const name = message.attachment_name || "Attachment";
+
+    if (type === "image") {
+      const image = document.createElement("img");
+
+      image.className = "chat-image";
+      image.alt = name;
+      image.loading = "lazy";
+      image.src = url;
+
+      image.addEventListener("click", function () {
+        elements.viewerImage.src = url;
+        elements.imageViewer.classList.add("active");
+      });
+
+      image.addEventListener("error", function () {
+        const fallback = document.createElement("div");
+        fallback.className = "image-fallback";
+        fallback.textContent =
+          "Image could not be loaded. Check the attachment URL and Storage permissions.";
+
+        image.replaceWith(fallback);
+      });
+
+      return image;
+    }
+
+    if (type === "video") {
+      const video = document.createElement("video");
+
+      video.className = "chat-video";
+      video.controls = true;
+      video.preload = "metadata";
+      video.playsInline = true;
+      video.src = url;
+
+      video.addEventListener("error", function () {
+        showNotice(
+          "This video could not be played. Check its file format and Storage URL.",
+          "error"
+        );
+      });
+
+      return video;
+    }
+
+    if (type === "audio" || type === "voice") {
+      const wrapper = document.createElement("div");
+
+      const label = document.createElement("div");
+      label.className = "audio-label";
+      label.textContent = type === "voice"
+        ? "🎤 Voice message"
+        : "🔊 Audio message";
+
+      const audio = document.createElement("audio");
+      audio.className = "audio-player";
+      audio.controls = true;
+      audio.preload = "metadata";
+      audio.src = url;
+
+      audio.addEventListener("error", function () {
+        label.textContent =
+          "Audio unavailable. Check the file format or Storage URL.";
+      });
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(audio);
+
+      return wrapper;
+    }
+
+    const link = document.createElement("a");
+
+    link.className = "file-card";
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.download = name;
+
+    const icon = document.createElement("span");
+    icon.className = "file-icon";
+    icon.textContent = "📎";
+
+    const details = document.createElement("div");
+    details.className = "file-details";
+
+    const fileName = document.createElement("div");
+    fileName.className = "file-name";
+    fileName.textContent = name;
+
+    const hint = document.createElement("div");
+    hint.className = "file-hint";
+    hint.textContent = "Open or download attachment";
+
+    details.appendChild(fileName);
+    details.appendChild(hint);
+
+    link.appendChild(icon);
+    link.appendChild(details);
+
+    return link;
+  }
+
+  elements.viewerClose.addEventListener("click", function () {
+    elements.imageViewer.classList.remove("active");
+    elements.viewerImage.removeAttribute("src");
+  });
+
+  elements.imageViewer.addEventListener("click", function (event) {
+    if (event.target === elements.imageViewer) {
+      elements.imageViewer.classList.remove("active");
+      elements.viewerImage.removeAttribute("src");
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      elements.imageViewer.classList.remove("active");
+      elements.viewerImage.removeAttribute("src");
+    }
+  });
+
+  /*
+   * MESSAGE RENDERING
+   */
+
+  function createReplyPreview(message) {
+    if (!message.reply_to) return null;
+
+    const original = findMessage(message.reply_to);
+
+    if (!original) return null;
+
+    const preview = document.createElement("div");
+    preview.className = "reply-preview";
+
+    const author = document.createElement("div");
+    author.className = "reply-author";
+
+    author.textContent = sameId(
+      original.sender_id,
+      currentUser.id
+    )
+      ? "You"
+      : getDisplayName(otherUser);
+
+    const content = document.createElement("div");
+    content.className = "reply-content";
+    content.textContent = getMessagePreview(original);
+
+    preview.appendChild(author);
+    preview.appendChild(content);
+
+    preview.addEventListener("click", function () {
+      const originalElement = document.querySelector(
+        '[data-message-id="' + String(original.id).replace(/"/g, "") + '"]'
+      );
+
+      if (originalElement) {
+        originalElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
+    });
+
+    return preview;
+  }
+
+  function renderMessage(message) {
+    const mine = sameId(message.sender_id, currentUser.id);
+
+    const row = document.createElement("div");
+    row.className = "message-row " + (mine ? "mine" : "theirs");
+    row.dataset.messageId = message.id;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    const replyPreview = createReplyPreview(message);
+
+    if (replyPreview) {
+      bubble.appendChild(replyPreview);
+    }
+
+    if (message.attachment_url) {
+      bubble.appendChild(createAttachment(message));
+    }
+
+    if (message.message) {
+      const text = document.createElement("div");
+      text.className = "message-text";
+      text.textContent = message.message;
+      bubble.appendChild(text);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "message-meta";
+
+    const time = document.createElement("span");
+    time.textContent = formatTime(message.created_at);
+
+    meta.appendChild(time);
+
+    if (mine) {
+      const readStatus = document.createElement("span");
+      readStatus.className = "read-status";
+      readStatus.textContent = message.is_read ? "✓✓" : "✓";
+      readStatus.title = message.is_read ? "Read" : "Sent";
+
+      meta.appendChild(readStatus);
+    }
+
+    bubble.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
+
+    const replyButton = document.createElement("button");
+    replyButton.className = "reply-button";
+    replyButton.type = "button";
+    replyButton.textContent = "↩ Reply";
+
+    replyButton.addEventListener("click", function () {
+      startReply(message);
+    });
+
+    actions.appendChild(replyButton);
+    bubble.appendChild(actions);
+
+    row.appendChild(bubble);
+
+    return row;
+  }
+
+  /*
+   * LOAD AND REFRESH MESSAGES
+   */
+
+  async function markIncomingMessagesRead(messages) {
+    const unreadIds = messages
+      .filter(function (message) {
+        return (
+          sameId(message.receiver_id, currentUser.id) &&
+          !message.is_read
+        );
+      })
+      .map(function (message) {
+        return message.id;
+      });
+
+    if (!unreadIds.length) return;
+
+    const { error } = await supabaseClient
+      .from("messages")
+      .update({ is_read: true })
+      .in("id", unreadIds)
+      .eq("receiver_id", currentUser.id);
+
+    if (error) {
+      console.warn("Could not mark messages as read:", error.message);
+    }
+  }
+
+  async function loadMessages(forceScroll) {
+    if (isRefreshing || !currentUser || !otherUserId) return;
+
+    isRefreshing = true;
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("messages")
+        .select(
+          "id, sender_id, receiver_id, message, created_at, is_read, message_type, attachment_url, attachment_name, attachment_type, reply_to"
+        )
+        .or(
+          "and(sender_id.eq." + currentUser.id +
+          ",receiver_id.eq." + otherUserId + ")," +
+          "and(sender_id.eq." + otherUserId +
+          ",receiver_id.eq." + currentUser.id + ")"
+        )
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
 
+      allMessages = data || [];
+
+      elements.messages.replaceChildren();
+
+      if (!allMessages.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent =
+          "No messages yet. Say hello and start your conversation!";
+
+        elements.messages.appendChild(empty);
+      } else {
+        allMessages.forEach(function (message) {
+          elements.messages.appendChild(renderMessage(message));
+        });
+      }
+
+      await markIncomingMessagesRead(allMessages);
+
+      if (forceScroll) {
+        scrollToBottom(true);
+      }
+
+    } catch (error) {
+      console.error("Loading messages error:", error);
+
+      showNotice(
+        "Could not load messages: " +
+        (error.message || "Check your database table and permissions."),
+        "error"
+      );
+
+    } finally {
+      isRefreshing = false;
+    }
+  }
+
+  /*
+   * TEXT AREA BEHAVIOUR
+   */
+
+  elements.input.addEventListener("input", function () {
+    this.style.height = "42px";
+
+    this.style.height = Math.min(
+      this.scrollHeight,
+      120
+    ) + "px";
+  });
+
+  elements.input.addEventListener("keydown", function (event) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey &&
+      !event.isComposing
+    ) {
+      event.preventDefault();
+
+      if (typeof elements.composer.requestSubmit === "function") {
+        elements.composer.requestSubmit();
+      } else {
+        elements.send.click();
+      }
+    }
+  });
+
+  /*
+   * NAVIGATION
+   */
+
+  elements.back.addEventListener("click", function () {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "home.html";
+    }
+  });
+
+  elements.refresh.addEventListener("click", function () {
+    loadMessages(true);
+  });
+
+  /*
+   * INITIALIZATION
+   */
+
+  async function initializeChat() {
+    if (!supabaseClient) {
+      elements.messages.innerHTML = "";
+
+      showNotice(
+        "Supabase client not found. Check your supabase.js file.",
+        "error"
+      );
+
+      return;
+    }
+
+    if (!otherUserId) {
+      elements.messages.innerHTML = "";
+
+      showNotice(
+        "No recipient selected. Open a user's profile and select Message.",
+        "error"
+      );
+
+      return;
+    }
+
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      const session = sessionData && sessionData.session;
+
       if (!session || !session.user) {
+        showNotice(
+          "Please log in to send and receive messages.",
+          "error"
+        );
 
-        location.href = "login.html";
+        setTimeout(function () {
+          window.location.href = "login.html";
+        }, 1500);
+
         return;
-
       }
 
       currentUser = session.user;
 
-      if (!otherId) {
-
-        $("messages").innerHTML = `
-          <div class="empty">
-            No conversation selected.<br><br>
-            Open a user's chat from your messages list.
-          </div>
-        `;
-
-        return;
-
-      }
-
-      if (otherId === currentUser.id) {
-
+      if (sameId(currentUser.id, otherUserId)) {
         showNotice(
-          "Choose another user to start a conversation.",
-          true
+          "You cannot start a conversation with yourself.",
+          "error"
         );
 
         return;
-
       }
 
       await loadOtherProfile();
 
       await loadMessages(true);
 
-      /*
-        Fallback polling keeps messages refreshing.
-        This is not instant real-time delivery.
-      */
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+      }
 
-      pollTimer = setInterval(() => {
+      refreshTimer = setInterval(function () {
         loadMessages(false);
-      }, 5000);
+      }, REFRESH_INTERVAL);
 
     } catch (error) {
-
-      console.error(error);
+      console.error("Chat initialization error:", error);
 
       showNotice(
-        error.message || "Could not open the chat.",
-        true
+        "Could not open the conversation: " +
+        (error.message || "Please try again."),
+        "error"
       );
-
     }
-
   }
 
-  /* LOAD THE OTHER USER'S PROFILE */
+  /*
+   * CLEANUP
+   */
 
-  async function loadOtherProfile() {
-
-    const { data, error } = await client
-      .from("profiles")
-      .select(
-        "id,username,first_name,last_name,profile_photo"
-      )
-      .eq("id", otherId)
-      .maybeSingle();
-
-    if (error) {
-      console.warn("Profile lookup:", error.message);
+  window.addEventListener("beforeunload", function () {
+    if (refreshTimer) {
+      clearInterval(refreshTimer);
     }
 
-    otherProfile = data || {
-      id: otherId
-    };
-
-    $("personName").textContent =
-      profileName(otherProfile);
-
-    if (otherProfile.profile_photo) {
-
-      const image = document.createElement("img");
-
-      image.src = otherProfile.profile_photo;
-      image.alt = "";
-      image.style.width = "100%";
-      image.style.height = "100%";
-      image.style.objectFit = "cover";
-
-      $("avatar").replaceChildren(image);
-
-    } else {
-
-      $("avatar").textContent = (
-        otherProfile.username ||
-        otherProfile.first_name ||
-        "G"
-      ).slice(0, 1).toUpperCase();
-
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
     }
 
-  }
+    stopRecordingTracks();
+  });
 
-  /* REPLY QUOTE */
-
-  function replyPreview(message) {
-
-    const text =
-      messageText(message) ||
-      message.attachment_name ||
-      (
-        message.message_type === "voice"
-          ? "Voice message"
-          : "Attachment"
-      );
-
-    const sender = message.sender_id === currentUser.id
-      ? "You"
-      : profileName(otherProfile);
-
-    return `
-      <div class="reply-quote">
-
-        <b>${escapeHtml(sender)}</b>
-
-        ${escapeHtml(text.slice(0, 180))}
-
-      </div>
-    `;
-
-  }
-
-  /* RENDER MESSAGE CONTENT */
-
-  function contentHtml(message) {
-
-    const type = message.message_type || "text";
-
-    const url = message.attachment_url;
-
-    const name =
-      message.attachment_name ||
-      "Attachment";
-
-    if (type === "image" && url) {
-
-      return `
-        <a
-          href="${escapeHtml(url)}"
-          target="_blank"
-          rel="noopener">
-
-          <img
-            class="media"
-            src="${escapeHtml(url)}"
-            alt="${escapeHtml(name)}"
-            loading="lazy">
-
-        </a>
-
-        ${
-          messageText(message)
-            ? `<div class="msg-text">${escapeHtml(messageText(message))}</div>`
-            : ""
-        }
-      `;
-
-    }
-
-    if (type === "video" && url) {
-
-      return `
-        <video
-          class="media"
-          src="${escapeHtml(url)}"
-          controls
-          playsinline
-          preload="metadata">
-        </video>
-
-        ${
-          messageText(message)
-            ? `<div class="msg-text">${escapeHtml(messageText(message))}</div>`
-            : ""
-        }
-      `;
-
-    }
-
-    if (
-      (type === "voice" || type === "audio") &&
-      url
-    ) {
-
-      return `
-        <audio
-          class="audio-player"
-          src="${escapeHtml(url)}"
-          controls
-          preload="metadata">
-        </audio>
-      `;
-
-    }
-
-    if (type === "file" && url) {
-
-      return `
-        <a
-          class="file-card"
-          href="${escapeHtml(url)}"
-          target="_blank"
-          rel="noopener">
-
-          <span class="file-icon">📎</span>
-
-          <span>
-            <b>${escapeHtml(name)}</b><br>
-            <small>Open or download file</small>
-          </span>
-
-        </a>
-
-        ${
-          messageText(message)
-            ? `<div class="msg-text">${escapeHtml(messageText(message))}</div>`
-            : ""
-        }
-      `;
-
-    }
-
-    return `
-      <div class="msg-text">
-        ${escapeHtml(messageText(message))}
-      </div>
-    `;
-
-  }
-
-  /* DISPLAY ALL MESSAGES */
-
-  function renderMessages(list, initial = false) {
-
-    const box = $("messages");
-
-    const nearBottom =
-      box.scrollHeight -
-      box.scrollTop -
-      box.clientHeight < 100;
-
-    if (!list.length) {
-
-      box.innerHTML = `
-        <div class="empty">
-          No messages yet.<br><br>
-          Say hello 👋
-        </div>
-      `;
-
-      return;
-
-    }
-
-    const html = list.map(message => {
-
-      const mine =
-        message.sender_id === currentUser.id;
-
-      const repliedMessage = message.reply_to
-        ? list.find(item =>
-            String(item.id) === String(message.reply_to)
-          )
-        : null;
-
-      const isRead = Boolean(
-        message.is_read ||
-        message.read_at
-      );
-
-      return `
-        <div
-          class="row ${mine ? "mine" : ""}"
-          data-id="${escapeHtml(message.id)}">
-
-          <div class="bubble">
-
-            <div class="msg-tools">
-
-              <button
-                class="tool reply-btn"
-                data-reply="${escapeHtml(message.id)}">
-
-                ↩ Reply
-
-              </button>
-
-            </div>
-
-            ${
-              repliedMessage
-                ? replyPreview(repliedMessage)
-                : ""
-            }
-
-            ${contentHtml(message)}
-
-            <div class="meta">
-
-              <span>
-                ${formatTime(message.created_at)}
-              </span>
-
-              ${
-                mine
-                  ? `
-                    <span
-                      class="ticks"
-                      title="${isRead ? "Read" : "Sent"}">
-
-                      ${isRead ? "✓✓" : "✓"}
-
-                    </span>
-                  `
-                  : ""
-              }
-
-            </div>
-
-          </div>
-
-        </div>
-      `;
-
-    }).join("");
-
-    box.innerHTML = html;
-
-    box.querySelectorAll("[data-reply]")
-      .forEach(button => {
-
-        button.addEventListener("click", () => {
-
-          const message = list.find(item =>
-            String(item.id) === button.dataset.reply
-          );
-
-          setReply(message);
-
-        });
-
-      });
-
-    if (initial || nearBottom) {
-      box.scrollTop = box.scrollHeight;
-    }
-
-  }
-
-  /* FETCH CONVERSATION */
-
-  async function loadMessages(initial = false) {
-
-    if (!currentUser || !otherId) return;
-
-    try {
-
-      const { data, error } = await client
-        .from("messages")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${currentUser.id})`
-        )
-        .order("created_at", {
-          ascending: true
-        })
-        .limit(300);
-
-      if (error) throw error;
-
-      const list = data || [];
-
-      renderMessages(
-        list,
-        initial || lastIds.size === 0
-      );
-
-      lastIds = new Set(
-        list.map(message => String(message.id))
-      );
-
-      $("status").textContent =
-        "Glo-Tube messages";
-
-      /*
-        Mark received messages as read.
-
-        Your messages table must have an is_read
-        boolean column for this feature.
-      */
-
-      const unread = list.filter(message =>
-        message.sender_id === otherId &&
-        !message.is_read
-      );
-
-      if (unread.length) {
-
-        const ids = unread.map(message => message.id);
-
-        const { error: readError } = await client
-          .from("messages")
-          .update({
-            is_read: true
-          })
-          .in("id", ids);
-
-        if (readError) {
-
-          console.warn(
-            "Read receipt update:",
-            readError.message
-          );
-
-        }
-
-      }
-
-    } catch (error) {
-
-      console.error(error);
-
-      showNotice(
-        "Could not refresh messages: " +
-        (error.message || "check your database setup"),
-         true
-      );
-
-    }
-
-  }
-
-  /* SELECT A MESSAGE TO REPLY TO */
-
-  function setReply(message) {
-
-    if (!message) return;
-
-    replyTo = message;
-
-    $("replyName").textContent =
-      message.sender_id === currentUser.id
-        ? "Replying to your message"
-        : "Replying to " + profileName(otherProfile);
-
-    $("replyText").textContent =
-      messageText(message) ||
-      message.attachment_name ||
-      (
-        message.message_type === "voice"
-          ? "Voice message"
-          : "Attachment"
-      );
-
-    $("replyBar").classList.add("show");
-
-    $("messageInput").focus();
-
-  }
-
-  function clearReply() {
-
-    replyTo = null;
-
-    $("replyBar").classList.remove("show");
-
-  }
-
-  $("cancelReply").addEventListener(
-    "click",
-    clearReply
-  );
-
-  /* SEND A MESSAGE TO SUPABASE */
-
-  async function insertMessage(payload) {
-
-    const fullMessage = {
-      sender_id: currentUser.id,
-      receiver_id: otherId,
-      ...payload
-    };
-
-    const { error } = await client
-      .from("messages")
-      .insert(fullMessage);
-
-    if (error) throw error;
-
-    clearReply();
-
-    await loadMessages(false);
-
-  }
-
-  /* SEND TEXT MESSAGES */
-
-  $("composer").addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-
-      const input = $("messageInput");
-      const text = input.value.trim();
-
-      if (!text) return;
-
-      $("sendBtn").disabled = true;
-
-      try {
-
-        await insertMessage({
-          message: text,
-          message_type: "text",
-          reply_to: replyTo?.id ?? null
-        });
-
-        input.value = "";
-        input.style.height = "auto";
-
-      } catch (error) {
-
-        console.error(error);
-
-        showNotice(
-          "Message not sent: " +
-          (error.message || "Check your database policies"),
-          true
-        );
-
-      } finally {
-
-        $("sendBtn").disabled = false;
-        input.focus();
-
-      }
-
-    }
-  );
-
-  /* AUTO-RESIZE THE TEXT INPUT */
-
-  $("messageInput").addEventListener(
-    "input",
-    function () {
-
-      this.style.height = "auto";
-
-      this.style.height =
-        Math.min(this.scrollHeight, 120) + "px";
-
-    }
-  );
-
-  /* OPEN FILE PICKER */
-
-  $("attachBtn").addEventListener(
-    "click",
-    () => $("fileInput").click()
-  );
-
-  /* UPLOAD AND SEND ATTACHMENTS */
-
-  $("fileInput").addEventListener(
-    "change",
-    async event => {
-
-      const file = event.target.files?.[0];
-
-      if (!file) return;
-
-      if (file.size > 25 * 1024 * 1024) {
-
-        showNotice(
-          "Choose a file smaller than 25 MB.",
-          true
-        );
-
-        event.target.value = "";
-
-        return;
-
-      }
-
-      $("attachBtn").disabled = true;
-
-      showNotice("Uploading " + file.name + "...");
-
-      try {
-
-        const safeName = file.name.replace(
-          /[^a-zA-Z0-9._-]/g,
-          "_"
-        );
-
-        const path =
-          `${currentUser.id}/${Date.now()}_${safeName}`;
-
-        const { error: uploadError } = await client
-          .storage
-          .from("chat-attachments")
-          .upload(path, file, {
-            upsert: false,
-            contentType:
-              file.type || "application/octet-stream"
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data } = client
-          .storage
-          .from("chat-attachments")
-          .getPublicUrl(path);
-
-        let type = "file";
-
-        if (file.type.startsWith("image/")) {
-          type = "image";
-        } else if (file.type.startsWith("video/")) {
-          type = "video";
-        } else if (file.type.startsWith("audio/")) {
-          type = "audio";
-        }
-
-        await insertMessage({
-          message: "",
-          message_type: type,
-          attachment_url: data.publicUrl,
-          attachment_name: file.name,
-          attachment_type:
-            file.type || "application/octet-stream",
-          reply_to: replyTo?.id ?? null
-        });
-
-        showNotice("Attachment sent successfully.");
-
-      } catch (error) {
-
-        console.error(error);
-
-        showNotice(
-          "Upload failed: " +
-          (error.message || "Check Storage settings"),
-          true
-        );
-
-      } finally {
-
-        $("attachBtn").disabled = false;
-        event.target.value = "";
-
-      }
-
-    }
-  );
-
-  /* RECORD AND SEND VOICE MESSAGES */
-
-  $("voiceBtn").addEventListener(
-    "click",
-    async () => {
-
-      /* Tap again to stop recording and send. */
-
-      if (mediaRecorder?.state === "recording") {
-
-        mediaRecorder.stop();
-
-        return;
-
-      }
-
-      if (
-        !navigator.mediaDevices?.getUserMedia ||
-        !window.MediaRecorder
-      ) {
-
-        showNotice(
-          "Voice recording is not supported in this browser.",
-          true
-        );
-
-        return;
-
-      }
-
-      try {
-
-        recordingStream =
-          await navigator.mediaDevices.getUserMedia({
-            audio: true
-          });
-
-        chunks = [];
-
-        let options = {};
-
-        if (
-          MediaRecorder.isTypeSupported(
-            "audio/webm;codecs=opus"
-          )
-        ) {
-
-          options = {
-            mimeType: "audio/webm;codecs=opus"
-          };
-
-        }
-
-        mediaRecorder = new MediaRecorder(
-          recordingStream,
-          options
-        );
-
-        mediaRecorder.ondataavailable = event => {
-
-          if (event.data.size) {
-            chunks.push(event.data);
-          }
-
-        };
-
-        mediaRecorder.onstop = async () => {
-
-          recordingStream
-            ?.getTracks()
-            .forEach(track => track.stop());
-
-          recordingStream = null;
-
-          $("recordingLabel")
-            .classList.remove("show");
-
-          $("voiceBtn").textContent = "🎙";
-
-          const blob = new Blob(chunks, {
-            type:
-              mediaRecorder.mimeType || "audio/webm"
-          });
-
-          if (!blob.size) return;
-
-          if (blob.size > 25 * 1024 * 1024) {
-
-            showNotice(
-              "Voice recording is too large.",
-              true
-            );
-
-            return;
-
-          }
-
-          $("voiceBtn").disabled = true;
-
-          showNotice("Sending voice message...");
-
-          try {
-
-            const path =
-              `${currentUser.id}/${Date.now()}_voice.webm`;
-
-            const { error } = await client
-              .storage
-              .from("chat-attachments")
-              .upload(path, blob, {
-                contentType: blob.type,
-                upsert: false
-              });
-
-            if (error) throw error;
-
-            const { data } = client
-              .storage
-              .from("chat-attachments")
-              .getPublicUrl(path);
-
-            await insertMessage({
-              message: "",
-              message_type: "voice",
-              attachment_url: data.publicUrl,
-              attachment_name: "Voice message",
-              attachment_type: blob.type,
-              reply_to: replyTo?.id ?? null
-            });
-
-            showNotice("Voice message sent.");
-
-          } catch (error) {
-
-            console.error(error);
-
-            showNotice(
-              "Voice message failed: " +
-              (error.message || "Check Storage settings"),
-              true
-            );
-
-          } finally {
-
-            $("voiceBtn").disabled = false;
-
-          }
-
-        };
-
-        mediaRecorder.start();
-
-        $("recordingLabel").classList.add("show");
-
-        $("voiceBtn").textContent = "■";
-
-        showNotice(
-          "Recording... Tap ■ to stop and send."
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-        showNotice(
-          "Microphone permission was denied or unavailable.",
-          true
-        );
-
-      }
-
-    }
-  );
-
-  /* REFRESH MESSAGES */
-
-  $("refreshBtn").addEventListener(
-    "click",
-    () => loadMessages(false)
-  );
-
-  /* BACK BUTTON */
-
-  $("backBtn").addEventListener(
-    "click",
-    () => {
-
-      if (history.length > 1) {
-
-        history.back();
-
-      } else {
-
-        location.href = "messages.html";
-
-      }
-
-    }
-  );
-
-  /* CLEAN UP WHEN LEAVING */
-
-  window.addEventListener(
-    "beforeunload",
-    () => {
-
-      if (pollTimer) {
-        clearInterval(pollTimer);
-      }
-
-      recordingStream
-        ?.getTracks()
-        .forEach(track => track.stop());
-
-    }
-  );
-
-  /* START THE CHAT */
-
-  init();
+  initializeChat();
 
 })();
 </script>
 
 </body>
-</html>
+  </html>
