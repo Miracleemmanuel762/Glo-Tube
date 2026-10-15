@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Create Account | Glo-Tube</title>
+
+  <meta
+    name="description"
+    content="Create your Glo-Tube account and join a community of video creators."
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: white;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 34px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+
+    .logo span {
+      color: #3b9cff;
+    }
+
+    .subtitle {
+      color: #9ba5b5;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #111722;
+      border: 1px solid #252d3b;
+      border-radius: 18px;
+      padding: 28px 22px;
+    }
+
+    h1 {
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    .description {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #9ba5b5;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e6eaf1;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #f5f5f5;
+      border-radius: 10px;
+      background: white;
+      color: #000000;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #e60000;
+      box-shadow: 0 0 0 3px rgba(59, 156, 255, 0.12);
+    }
+
+    input::placeholder {
+      color: #000000;
+    }
+
+    .password-note {
+      display: block;
+      color: #e60000;
+      font-size: 12px;
+      margin-top: 7px;
+      line-height: 1.5;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      background: #e60000;
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: white;
+color:#e60000;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      padding: 13px;
+      border-radius: 9px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .message.success {
+      display: block;
+      color: #a7f3c0;
+      background: #102a1d;
+      border: 1px solid #245c3b;
+    }
+
+    .message.error {
+      display: block;
+      color: #ffb4b4;
+      background: #301717;
+      border: 1px solid #6b2929;
+    }
+
+    .message.info {
+      display: block;
+      color: #b8dcff;
+      background: #10243a;
+      border: 1px solid #234b73;
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 23px;
+      color: #9ba5b5;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .footer-text a {
+      color: #54a9ff;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+
+    .bottom-note {
+      text-align: center;
+      color: #687487;
+      font-size: 12px;
+      margin-top: 23px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 360px) {
+      .card {
+        padding: 23px 17px;
+      }
+
+      .logo {
+        font-size: 30px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <div class="logo">
+      Glo-<span>Tube</span>
+    </div>
+
+    <p class="subtitle">
+      Discover videos. Share your creativity. Connect with creators.
+    </p>
+
+    <section class="card">
+
+      <h1>Create your account</h1>
+
+      <p class="description">
+        Join Glo-Tube and start exploring a world of videos.
+      </p>
+
+      <div
+        id="message"
+        class="message"
+        role="status"
+        aria-live="polite"
+      ></div>
+
+      <form id="registerForm">
+
+        <div class="form-group">
+          <label for="username">Username</label>
+
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Choose a username"
+            minlength="3"
+            maxlength="30"
+            pattern="[A-Za-z0-9_]+"
+            title="Use letters, numbers, and underscores only."
+            autocomplete="username"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email address</label>
+
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Create a password"
+            minlength="6"
+            autocomplete="new-password"
+            required
+          >
+
+          <span class="password-note">
+            Use at least 6 characters.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm password</label>
+
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            placeholder="Enter your password again"
+            minlength="6"
+            autocomplete="new-password"
+            required
+          >
+        </div>
+
+        <button type="submit" id="registerButton">
+          Create Account
+        </button>
+
+      </form>
+
+      <div class="footer-text">
+        Already have an account?
+        <a href="login.html">Log in</a>
+      </div>
+
+    </section>
+
+    <p class="bottom-note">
+      &copy; <span id="year"></span> Glo-Tube.
+      Developed by GlobalMedia Development.
+    </p>
+
+  </main>
+
+  <!-- Supabase JavaScript library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    /*
+      GLO-TUBE SUPABASE CONFIGURATION
+
+      Use the same project URL and anon/public key
+      that your working Glo-Tube login page uses.
+
+      Never put a service_role or secret key here.
+    */
+
+    const SUPABASE_URL =
+      "https://iajjkzphwzkacibkrdhb.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhamprenBod3prYWNpYmtyZGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2Mzg3MjgsImV4cCI6MjEwNzIxNDcyOH0.ATB6rsZCC7nkoIf7IL938POFTUEP-SIM6eyx6dNe9ZQ";
+
+    const EMAIL_CONFIRMATION_URL =
+      "https://glo-tube.vercel.app/email-confirmation.html";
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+    const registerForm =
+      document.getElementById("registerForm");
+
+    const registerButton =
+      document.getElementById("registerButton");
+
+    const messageBox =
+      document.getElementById("message");
+
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+
+
+    function showMessage(message, type) {
+      messageBox.textContent = message;
+      messageBox.className = "message " + type;
+      messageBox.style.display = "block";
+    }
+
+
+    registerForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const username =
+        document.getElementById("username").value.trim();
+
+      const email =
+        document.getElementById("email").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+
+      // Validate username
+      if (!/^[A-Za-z0-9_]{3,30}$/.test(username)) {
+        showMessage(
+          "Your username must be 3–30 characters and contain only letters, numbers, and underscores.",
+          "error"
+        );
+        return;
+      }
+
+
+      // Validate passwords
+      if (password.length < 6) {
+        showMessage(
+          "Your password must contain at least 6 characters.",
+          "error"
+        );
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMessage(
+          "Your passwords do not match. Please check them.",
+          "error"
+        );
+        return;
+      }
+
+
+      // Prevent repeated clicks while submitting
+      registerButton.disabled = true;
+      registerButton.textContent = "Creating Account...";
+
+      showMessage(
+        "Connecting to Glo-Tube...",
+        "info"
+      );
+
+
+      try {
+
+        const { data, error } =
+          await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+
+            options: {
+              data: {
+                username: username
+              },
+
+              emailRedirectTo: EMAIL_CONFIRMATION_URL
+            }
+          });
+
+
+        // Display the actual Supabase error
+        if (error) {
+          console.error("Glo-Tube registration error:", error);
+
+          showMessage(
+            "Registration failed: " + error.message,
+            "error"
+          );
+
+          return;
+        }
+
+
+        // Check whether Supabase returned a user
+        if (!data || !data.user) {
+          console.error(
+            "Registration returned no user:",
+            data
+          );
+
+          showMessage(
+            "Supabase did not return a user account. Please try again.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        // Help identify duplicate-email responses
+        if (
+          Array.isArray(data.user.identities) &&
+          data.user.identities.length === 0
+        ) {
+          showMessage(
+            "This email may already be registered. Please log in or use your existing account's password recovery option. If you believe this is a new email, check the Supabase project configuration.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        // Diagnostic information for debugging
+        console.log("Glo-Tube signup response:", {
+          userId: data.user.id,
+          email: data.user.email,
+          identities: data.user.identities,
+          sessionCreated: Boolean(data.session)
+        });
+
+
+        // Email confirmation is normally required when
+        // Confirm Email is enabled in Supabase.
+        if (!data.session) {
+          showMessage(
+            "Your signup request was accepted. Check your email inbox and spam folder for the Glo-Tube confirmation link. If no email arrives, check your Supabase Auth email settings and delivery logs.",
+            "success"
+          );
+
+          registerForm.reset();
+
+          return;
+        }
+
+
+        // If confirmation is disabled and a session is created,
+        // the user can continue to the home page.
+        showMessage(
+          "Your account has been created successfully. Opening Glo-Tube...",
+          "success"
+        );
+
+        window.location.href = "home.html";
+
+
+      } catch (err) {
+
+        console.error(
+          "Unexpected Glo-Tube registration error:",
+          err
+        );
+
+        showMessage(
+          "Something went wrong while connecting to Glo-Tube. Check your internet connection and try again.",
+          "error"
+        );
+
+      } finally {
+
+        registerButton.disabled = false;
+        registerButton.textContent = "Create Account";
+
+      }
+
+    });
+  </script>
+
+</body>
+</html>
