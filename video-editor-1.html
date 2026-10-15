@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Glo-Tube — Create Video</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}button,input,textarea{font:inherit}.page{max-width:720px;margin:auto;padding:18px 16px 110px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{font-size:23px;font-weight:800}.brand span{color:#3b9cff}.back{color:#fff;text-decoration:none;background:#171717;border:1px solid #2a2a2a;border-radius:12px;padding:9px 12px}.picker{border:1px dashed #555;border-radius:18px;padding:28px;text-align:center;background:#111}.picker input{width:100%;margin-top:14px}.preview-wrap{display:none;margin-top:16px;background:#000;border-radius:18px;overflow:hidden;position:relative}.preview-wrap video,.preview-wrap canvas{display:block;width:100%;max-height:62vh;object-fit:contain;background:#000;margin:auto}.tools{display:none;margin-top:16px;background:#111;border:1px solid #242424;border-radius:18px;padding:15px}.tools:not(.hidden){display:block}.tool-title{font-weight:800;margin:0 0 10px}.row{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.tool{flex:0 0 auto;border:1px solid #333;background:#181818;color:#fff;border-radius:12px;padding:10px 13px}.tool.active{border-color:#3b9cff;background:#10243a}.field{margin-top:15px}.field label{display:block;font-size:13px;color:#aaa;margin-bottom:7px}.range{width:100%}textarea{width:100%;min-height:90px;background:#171717;color:#fff;border:1px solid #333;border-radius:12px;padding:12px;resize:vertical}.actions{display:none;margin-top:16px;gap:10px}.primary,.secondary{border:0;border-radius:13px;padding:13px 16px;font-weight:800}.primary{background:#3b9cff;color:#fff;flex:1}.secondary{background:#222;color:#fff}.status{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#121212;color:#bbb;font-size:14px;line-height:1.45}.music-name{font-size:12px;color:#aaa;margin-top:7px}.trim-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.number-input{width:100%;background:#171717;color:#fff;border:1px solid #333;border-radius:10px;padding:11px}.cover-preview{display:none;width:100%;max-height:220px;object-fit:contain;background:#080808;border-radius:12px;margin-top:10px}.overlay-preview{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);max-width:90%;text-align:center;font-weight:800;font-size:24px;line-height:1.2;text-shadow:0 2px 5px #000,0 0 8px #000;white-space:pre-wrap;overflow-wrap:anywhere;pointer-events:none}.hidden{display:none!important}@media(min-width:600px){.preview-wrap video,.preview-wrap canvas{max-height:68vh}}
+</style>
+</head>
+<body>
+<main class="page">
+<header class="top"><div class="brand">Glo-<span>Tube</span></div><a class="back" href="home.html">Cancel</a></header>
+<section class="picker" id="picker">
+<h2>Create something for Glo-Tube</h2>
+<p style="color:#aaa">Edit a video or turn multiple photos into a video slideshow.</p>
+<div class="row" style="justify-content:center;flex-wrap:wrap;margin:14px 0">
+<button class="tool active" id="videoMode" type="button">🎬 Edit video</button>
+<button class="tool" id="photoMode" type="button">🖼️ Photo slideshow</button>
+</div>
+<div id="videoPicker"><label for="videoFile">Choose a video from your phone</label><input id="videoFile" type="file" accept="video/*"></div>
+<div id="photoPicker" class="hidden"><label for="photoFiles">Choose multiple photos (in the order selected)</label><input id="photoFiles" type="file" accept="image/*" multiple><p class="music-name">Tip: select at least 2 photos. Use the arrows below to change their order.</p></div>
+</section>
+<section class="preview-wrap" id="previewWrap"><video id="preview" playsinline controls></video><canvas id="photoCanvas" class="hidden" width="720" height="1280"></canvas><div class="overlay-preview" id="overlayPreview"></div></section>
+<section class="tools hidden" id="photoTools">
+<h3 class="tool-title">Your photos</h3><div id="photoList"></div>
+<div class="field"><label>Each photo duration</label><div class="row"><button class="tool active" data-duration="2">2 sec</button><button class="tool" data-duration="3">3 sec</button><button class="tool" data-duration="4">4 sec</button><button class="tool" data-duration="5">5 sec</button></div><div class="music-name" id="photoDurationHint">Each photo stays on screen for 2 seconds.</div></div>
+<div class="field"><label>Transition between photos</label><div class="row" id="transitions"><button class="tool active" data-transition="fade">Fade</button><button class="tool" data-transition="slide">Slide</button><button class="tool" data-transition="zoom">Zoom</button><button class="tool" data-transition="cut">Cut</button></div></div>
+<div class="field"><label>Photo effect</label><div class="row" id="photoFilters"><button class="tool active" data-pfilter="none">Normal</button><button class="tool" data-pfilter="brightness">Bright</button><button class="tool" data-pfilter="contrast">Contrast</button><button class="tool" data-pfilter="saturate">Vivid</button><button class="tool" data-pfilter="grayscale">B&amp;W</button><button class="tool" data-pfilter="sepia">Warm</button></div></div>
+<div class="field"><button class="tool" id="previewSlideshow" type="button">▶ Preview slideshow</button><button class="tool" id="stopSlideshow" type="button">■ Stop preview</button></div>
+</section>
+<section class="tools" id="tools">
+<h3 class="tool-title">Effects</h3>
+<div class="row" id="filters">
+<button class="tool active" data-filter="none">Normal</button><button class="tool" data-filter="brightness">Bright</button><button class="tool" data-filter="contrast">Contrast</button><button class="tool" data-filter="saturate">Vivid</button><button class="tool" data-filter="grayscale">B&W</button><button class="tool" data-filter="sepia">Warm</button>
+</div>
+<div class="field"><label>Speed</label><div class="row" id="speeds"><button class="tool active" data-speed="1">1×</button><button class="tool" data-speed="0.5">0.5×</button><button class="tool" data-speed="1.5">1.5×</button><button class="tool" data-speed="2">2×</button></div></div>
+<div class="field"><label>Trim video (seconds)</label><div class="trim-grid"><div><label for="trimStart">Start at</label><input class="number-input" id="trimStart" type="number" min="0" step="0.1" value="0"></div><div><label for="trimEnd">End at</label><input class="number-input" id="trimEnd" type="number" min="0" step="0.1" placeholder="Video end"></div></div><div class="music-name" id="trimHint">Choose a video to set its trim range.</div></div>
+<div class="field"><label>Text on video (optional)</label><textarea id="overlayText" maxlength="120" placeholder="Add text that appears on your video..."></textarea><div class="row" id="overlayPositions" style="margin-top:8px"><button class="tool active" type="button" data-position="bottom">Bottom</button><button class="tool" type="button" data-position="center">Center</button><button class="tool" type="button" data-position="top">Top</button></div></div>
+<div class="field"><label>Cover image (optional)</label><input id="coverFile" type="file" accept="image/*"><img id="coverPreview" class="cover-preview" alt="Selected video cover"><div class="music-name">Choose a thumbnail image from your phone. It will be saved as the video's cover if your videos table has a cover_url column.</div></div>
+<div class="field"><label>Original sound</label><input class="range" id="videoVolume" type="range" min="0" max="1" step="0.05" value="1"></div>
+<div class="field"><label>🎵 Background sound (choose from your phone)</label><input id="audioFile" type="file" accept="audio/*"><div class="music-name" id="musicName">No background sound selected. This uses a local audio file — no music database needed.</div></div>
+<div class="field"><label>Background sound volume</label><input class="range" id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.6"></div>
+<div class="field"><label>Caption</label><textarea id="caption" maxlength="1000" placeholder="Write a caption..."></textarea></div>
+</section>
+<div class="actions" id="actions"><button class="secondary" id="reset" type="button">Reset</button><button class="primary" id="post" type="button">Render &amp; Post</button></div>
+<div class="status" id="status"></div>
+</main>
+<script>
+const CLOUDINARY_CLOUD="dg9qaek0h", CLOUDINARY_PRESET="glotube_uploads";
+const $=id=>document.getElementById(id);
+let currentUser=null, videoURL="", audioURL="", coverURL="", filterName="none", speed=1, audioFile=null, coverFile=null, overlayPosition="bottom", videoDuration=0;
+let editorMode="video", photoItems=[], photoDuration=2, photoTransition="fade", photoFilter="none", photoPreviewTimer=null, photoPreviewStart=0;
+const photoFilterMap={none:"none",brightness:"brightness(1.25)",contrast:"contrast(1.3)",saturate:"saturate(1.7)",grayscale:"grayscale(1)",sepia:"sepia(.75)"};
+const filterMap={none:"none",brightness:"brightness(1.25)",contrast:"contrast(1.3)",saturate:"saturate(1.7)",grayscale:"grayscale(1)",sepia:"sepia(.75)"};
+function status(text,show=true){$("status").style.display=show?"block":"none";$("status").textContent=text}
+async function boot(){const {data}=await supabaseClient.auth.getSession();currentUser=data.session?.user||null;if(!currentUser){location.replace("login.html");return}}
+boot();
+$("videoFile").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;setMode("video");$("preview").classList.remove("hidden");$("photoCanvas").classList.add("hidden");videoURL=URL.createObjectURL(file);$("preview").src=videoURL;$("previewWrap").style.display="block";$("tools").style.display="block";$("actions").style.display="flex";$("preview").load();$("preview").onloadedmetadata=()=>{videoDuration=$("preview").duration||0;$("trimStart").max=Math.max(0,videoDuration);$("trimEnd").max=Math.max(0,videoDuration);$("trimEnd").value=videoDuration.toFixed(1);$("trimHint").textContent="Video duration: "+videoDuration.toFixed(1)+" seconds."}});
+$("filters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;document.querySelectorAll("#filters .tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");filterName=b.dataset.filter;$("preview").style.filter=filterMap[filterName]||"none"});
+$("speeds").addEventListener("click",e=>{const b=e.target.closest("button[data-speed]");if(!b)return;document.querySelectorAll("#speeds .tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");speed=Number(b.dataset.speed);$("preview").playbackRate=speed});
+$("videoVolume").addEventListener("input",e=>$("preview").volume=Number(e.target.value));
+$("audioFile").addEventListener("change",e=>{audioFile=e.target.files[0]||null;if(audioURL)URL.revokeObjectURL(audioURL);audioURL=audioFile?URL.createObjectURL(audioFile):"";$("musicName").textContent=audioFile?audioFile.name:"No background sound selected."});
+$("reset").onclick=()=>{filterName="none";speed=1;$("preview").style.filter="none";$("preview").playbackRate=1;$("preview").volume=1;$("videoVolume").value=1;$("musicVolume").value=.6;$("trimStart").value=0;$("trimEnd").value=videoDuration?videoDuration.toFixed(1):"";$("overlayText").value="";$("overlayPreview").textContent="";overlayPosition="bottom";positionOverlayPreview();document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));document.querySelector('#filters [data-filter="none"]').classList.add("active");document.querySelector('#speeds [data-speed="1"]').classList.add("active")};
+$("overlayText").addEventListener("input",()=>{$("overlayPreview").textContent=$("overlayText").value;positionOverlayPreview()});
+$("overlayPositions").addEventListener("click",e=>{const b=e.target.closest("button[data-position]");if(!b)return;overlayPosition=b.dataset.position;document.querySelectorAll("#overlayPositions .tool").forEach(x=>x.classList.toggle("active",x===b));positionOverlayPreview()});
+function positionOverlayPreview(){const el=$("overlayPreview");el.style.top=overlayPosition==="top"?"12%":overlayPosition==="center"?"50%":"auto";el.style.bottom=overlayPosition==="bottom"?"12%":"auto";el.style.transform=overlayPosition==="center"?"translate(-50%,-50%)":"translateX(-50%)"}
+$("coverFile").addEventListener("change",e=>{coverFile=e.target.files[0]||null;if(coverURL)URL.revokeObjectURL(coverURL);coverURL=coverFile?URL.createObjectURL(coverFile):"";const img=$("coverPreview");img.src=coverURL;img.style.display=coverURL?"block":"none"});
+
+function setMode(mode){
+ editorMode=mode;
+ $("videoMode").classList.toggle("active",mode==="video");
+ $("photoMode").classList.toggle("active",mode==="photo");
+ $("videoPicker").classList.toggle("hidden",mode!=="video");
+ $("photoPicker").classList.toggle("hidden",mode!=="photo");
+ $("previewWrap").style.display="none";$("tools").style.display="none";$("photoTools").classList.add("hidden");$("photoTools").style.display="none";$("actions").style.display="none";
+ stopPhotoPreview();
+}
+$("videoMode").onclick=()=>setMode("video");
+$("photoMode").onclick=()=>setMode("photo");
+$("photoFiles").addEventListener("change",e=>{
+ stopPhotoPreview(); photoItems.forEach(x=>URL.revokeObjectURL(x.url)); photoItems=[];
+ Array.from(e.target.files||[]).forEach((file,i)=>photoItems.push({file,url:URL.createObjectURL(file),name:file.name,index:i,img:null}));
+ if(photoItems.length<2){status("Choose at least 2 photos to make a slideshow.");$("previewWrap").style.display="none";return}
+ const loads=photoItems.map(item=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{item.img=im;resolve()};im.onerror=()=>reject(new Error("One of the selected photos could not be opened."));im.src=item.url}));
+ Promise.all(loads).then(()=>{setMode("photo");$("previewWrap").style.display="block";$("preview").classList.add("hidden");$("photoCanvas").classList.remove("hidden");$("photoTools").classList.remove("hidden");$("photoTools").style.display="block";$("actions").style.display="flex";$("photoDurationHint").textContent=`Each photo stays on screen for ${photoDuration} seconds. Total video: about ${photoItems.length*photoDuration} seconds.`;renderPhotoList();drawPhotoFrame(0,0);status("Photos ready. Choose the order, effects, transition and background sound.")}).catch(err=>status(err.message));
+});
+function renderPhotoList(){
+ const list=$("photoList");list.innerHTML="";
+ photoItems.forEach((item,i)=>{const row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #292929";
+ const img=document.createElement("img");img.src=item.url;img.alt="";img.style.cssText="width:54px;height:64px;object-fit:cover;border-radius:8px";
+ const name=document.createElement("div");name.style.cssText="font-size:12px;flex:1;overflow-wrap:anywhere";name.textContent=(i+1)+". "+item.name;
+ const up=document.createElement("button");up.className="tool";up.textContent="↑";up.disabled=i===0;up.onclick=()=>movePhoto(i,-1);
+ const down=document.createElement("button");down.className="tool";down.textContent="↓";down.disabled=i===photoItems.length-1;down.onclick=()=>movePhoto(i,1);
+ const remove=document.createElement("button");remove.className="tool";remove.textContent="✕";remove.onclick=()=>{URL.revokeObjectURL(item.url);photoItems.splice(i,1);renderPhotoList();if(photoItems.length<2){stopPhotoPreview();$("photoTools").classList.add("hidden");$("photoTools").style.display="none";$("actions").style.display="none";status("Choose at least 2 photos to make a slideshow.")}else drawPhotoFrame(0,0)};
+ row.append(img,name,up,down,remove);list.appendChild(row)});
+}
+function movePhoto(i,dir){const j=i+dir;if(j<0||j>=photoItems.length)return;[photoItems[i],photoItems[j]]=[photoItems[j],photoItems[i]];renderPhotoList();drawPhotoFrame(0,0)}
+document.querySelector("#photoTools [data-duration='2']").classList.add("active");
+$("photoTools").addEventListener("click",e=>{
+ const d=e.target.closest("[data-duration]");if(d){photoDuration=Number(d.dataset.duration);document.querySelectorAll("[data-duration]").forEach(x=>x.classList.toggle("active",x===d));$("photoDurationHint").textContent=`Each photo stays on screen for ${photoDuration} seconds. Total video: about ${photoItems.length*photoDuration} seconds.`}
+ const t=e.target.closest("[data-transition]");if(t){photoTransition=t.dataset.transition;document.querySelectorAll("#transitions .tool").forEach(x=>x.classList.toggle("active",x===t))}
+ const f=e.target.closest("[data-pfilter]");if(f){photoFilter=f.dataset.pfilter;document.querySelectorAll("#photoFilters .tool").forEach(x=>x.classList.toggle("active",x===f));drawPhotoFrame(0,0)}
+});
+function drawPhotoFrame(index,progress,targetCanvas){
+ if(!photoItems.length)return;const canvas=targetCanvas||$("photoCanvas"),ctx=canvas.getContext("2d");const w=canvas.width=720,h=canvas.height=1280;const item=photoItems[Math.max(0,Math.min(index,photoItems.length-1))];const im=item.img;if(!im)return;
+ ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);ctx.save();ctx.filter=photoFilterMap[photoFilter]||"none";
+ let scale=Math.max(w/im.width,h/im.height);if(photoTransition==="zoom")scale*=1+Math.max(0,Math.min(1,progress))*.12;
+ let dw=im.width*scale,dh=im.height*scale,dx=(w-dw)/2,dy=(h-dh)/2;
+ if(photoTransition==="slide")dx+=(1-Math.max(0,Math.min(1,progress)))*w;
+ if(photoTransition==="fade")ctx.globalAlpha=Math.max(.08,Math.min(1,progress));ctx.drawImage(im,dx,dy,dw,dh);ctx.restore();
+ const text=$("overlayText").value.trim();if(text){ctx.save();ctx.filter="none";const fs=42;ctx.font=`800 ${fs}px Arial`;ctx.textAlign="center";ctx.textBaseline="middle";const lines=[];let line="";text.split(/\s+/).forEach(word=>{const test=line?line+" "+word:word;if(ctx.measureText(test).width>w*.86&&line){lines.push(line);line=word}else line=test});if(line)lines.push(line);let y=overlayPosition==="top"?130:overlayPosition==="center"?h/2:h-160;const lh=fs*1.15;y-=((lines.length-1)*lh)/2;ctx.lineWidth=5;ctx.strokeStyle="#000";ctx.fillStyle="#fff";lines.forEach((txt,i)=>{ctx.strokeText(txt,w/2,y+i*lh,w*.88);ctx.fillText(txt,w/2,y+i*lh,w*.88)});ctx.restore()}
+}
+function stopPhotoPreview(){if(photoPreviewTimer)cancelAnimationFrame(photoPreviewTimer);photoPreviewTimer=null}
+function animatePhotoPreview(){if(!photoItems.length)return;const total=photoItems.length*photoDuration;const elapsed=(performance.now()-photoPreviewStart)/1000;if(elapsed>=total){stopPhotoPreview();drawPhotoFrame(photoItems.length-1,1);return}const pos=elapsed/photoDuration,index=Math.floor(pos),progress=pos-index;drawPhotoFrame(index,progress);photoPreviewTimer=requestAnimationFrame(animatePhotoPreview)}
+$("previewSlideshow").onclick=()=>{if(photoItems.length<2)return;stopPhotoPreview();photoPreviewStart=performance.now();animatePhotoPreview()};
+$("stopSlideshow").onclick=()=>{stopPhotoPreview();drawPhotoFrame(0,0)};
+async function renderPhotoSlideshow(){
+ if(photoItems.length<2)throw new Error("Please choose at least 2 photos.");
+ const canvas=document.createElement("canvas");canvas.width=720;canvas.height=1280;const ctx=canvas.getContext("2d");
+ const stream=canvas.captureStream(30);let ac=null,musicAudio=null;
+ if(audioURL){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error("This browser does not support audio rendering.");ac=new AC();const dest=ac.createMediaStreamDestination();musicAudio=document.createElement("audio");musicAudio.src=audioURL;musicAudio.loop=true;musicAudio.preload="auto";const src=ac.createMediaElementSource(musicAudio),gain=ac.createGain();gain.gain.value=Number($("musicVolume").value);src.connect(gain);gain.connect(dest);dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));await new Promise((res,rej)=>{if(musicAudio.readyState>=2)res();else{musicAudio.oncanplay=res;musicAudio.onerror=()=>rej(new Error("Could not read the selected background sound."));musicAudio.load()}});await ac.resume()}
+ const types=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"],mime=types.find(t=>MediaRecorder.isTypeSupported(t));if(!mime)throw new Error("Your browser cannot export this slideshow. Please try Chrome.");
+ const recorder=new MediaRecorder(stream,{mimeType:mime}),chunks=[];recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+ const total=photoItems.length*photoDuration;let start=0,raf=0;
+ const draw=now=>{const elapsed=(now-start)/1000;if(elapsed>=total){recorder.stop();return}const pos=elapsed/photoDuration,index=Math.min(photoItems.length-1,Math.floor(pos)),progress=pos-index;drawPhotoFrame(index,progress,canvas);raf=requestAnimationFrame(draw)};
+ const result=new Promise((resolve,reject)=>{recorder.onerror=()=>reject(new Error("Slideshow rendering failed."));recorder.onstop=()=>{cancelAnimationFrame(raf);if(musicAudio)musicAudio.pause();stream.getTracks().forEach(t=>t.stop());if(ac)ac.close();resolve(new Blob(chunks,{type:mime}))}});
+ recorder.start(500);start=performance.now();if(musicAudio)musicAudio.play().catch(()=>{});raf=requestAnimationFrame(draw);status(`Rendering ${photoItems.length} photos into a video. Keep this page open…`);return result;
+}
+
+function getUsername(){return currentUser.user_metadata?.username||currentUser.email?.split("@")[0]||"User"}
+async function cloudinaryUpload(blob,resource="video"){const fd=new FormData();fd.append("file",blob,resource==="video"?"glotube-edited.webm":(resource==="image"?(blob.name||"glotube-cover.jpg"):"source-audio"));fd.append("upload_preset",CLOUDINARY_PRESET);const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resource}/upload`,{method:"POST",body:fd});const j=await r.json();if(!r.ok||!j.secure_url)throw new Error(j.error?.message||"Cloudinary upload failed");return j.secure_url}
+async function renderEdited(){
+  if(!videoURL) throw new Error("Please choose a video first.");
+  const v=document.createElement("video");
+  v.src=videoURL; v.playsInline=true; v.preload="auto"; v.muted=false;
+  v.style.position="fixed"; v.style.left="-99999px"; v.style.width="1px"; v.style.height="1px";
+  document.body.appendChild(v);
+  await new Promise((resolve,reject)=>{if(v.readyState>=2&&v.videoWidth>0){resolve();return;}v.addEventListener("canplay",resolve,{once:true});v.addEventListener("error",()=>reject(new Error("Could not load the selected video.")),{once:true});v.load();});
+  const canvas=document.createElement("canvas");
+  const w=v.videoWidth||720,h=v.videoHeight||1280,scale=Math.min(1,1280/Math.max(w,h));
+  canvas.width=Math.max(2,Math.round(w*scale));canvas.height=Math.max(2,Math.round(h*scale));
+  const ctx=canvas.getContext("2d",{alpha:false});
+  const AC=window.AudioContext||window.webkitAudioContext;if(!ctx||!AC){v.remove();throw new Error("Your browser cannot render this video. Please use Chrome.");}
+  const ac=new AC(),dest=ac.createMediaStreamDestination(),vs=ac.createMediaElementSource(v),vg=ac.createGain();
+  vg.gain.value=Number($("videoVolume").value);vs.connect(vg);vg.connect(dest);
+  let musicAudio=null;
+  if(audioURL){musicAudio=document.createElement("audio");musicAudio.src=audioURL;musicAudio.preload="auto";const ms=ac.createMediaElementSource(musicAudio),mg=ac.createGain();mg.gain.value=Number($("musicVolume").value);ms.connect(mg);mg.connect(dest);await new Promise((res,rej)=>{if(musicAudio.readyState>=2)res();else{musicAudio.addEventListener("canplay",res,{once:true});musicAudio.addEventListener("error",()=>rej(new Error("Could not load the background sound.")),{once:true});musicAudio.load();}});}
+  const stream=canvas.captureStream(30);dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+  const types=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];const mime=types.find(t=>MediaRecorder.isTypeSupported(t));
+  if(!mime){stream.getTracks().forEach(t=>t.stop());ac.close();v.remove();throw new Error("Chrome could not create a video recorder.");}
+  let recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime});}catch(e){stream.getTracks().forEach(t=>t.stop());ac.close();v.remove();throw new Error("Video recorder could not start: "+e.message);}
+  const chunks=[];let raf=0,done=false;
+  const cleanup=()=>{cancelAnimationFrame(raf);v.pause();if(musicAudio)musicAudio.pause();stream.getTracks().forEach(t=>t.stop());ac.close().catch(()=>{});v.remove();};
+  const trimStart=Math.max(0,Number($("trimStart").value)||0);const requestedEnd=Number($("trimEnd").value);const trimEnd=Number.isFinite(requestedEnd)&&requestedEnd>0?Math.min(requestedEnd,v.duration||requestedEnd):(v.duration||requestedEnd);if(trimStart>=(v.duration||trimEnd)||trimEnd<=trimStart){cleanup();throw new Error("Please choose a valid trim start and end time.")}const overlayText=$("overlayText").value.trim();
+  return await new Promise((resolve,reject)=>{
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+    recorder.onerror=e=>{if(done)return;done=true;cleanup();reject(e.error||new Error("Video rendering failed."));};
+    recorder.onstop=()=>{if(done)return;done=true;const blob=new Blob(chunks,{type:mime});cleanup();if(!blob.size){reject(new Error("The browser produced an empty video. Please try again in Chrome."));return;}resolve(blob);};
+    const draw=()=>{if(done)return;ctx.save();ctx.filter=filterMap[filterName]||"none";ctx.drawImage(v,0,0,canvas.width,canvas.height);ctx.restore();if(overlayText){const fontSize=Math.max(24,Math.round(canvas.width*0.055));ctx.save();ctx.filter="none";ctx.font=`800 ${fontSize}px Arial, sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";const maxWidth=canvas.width*.88;const words=overlayText.split(/\s+/);const lines=[];let line="";for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const lineHeight=fontSize*1.2;const blockHeight=lines.length*lineHeight;let y=overlayPosition==="top"?canvas.height*.13+blockHeight/2:overlayPosition==="center"?canvas.height/2:canvas.height*.84-blockHeight/2;ctx.lineJoin="round";ctx.lineWidth=Math.max(3,fontSize*.16);ctx.strokeStyle="rgba(0,0,0,.9)";ctx.fillStyle="#fff";lines.forEach((txt,i)=>{ctx.strokeText(txt,canvas.width/2,y+i*lineHeight,maxWidth);ctx.fillText(txt,canvas.width/2,y+i*lineHeight,maxWidth)});ctx.restore()}if(v.currentTime>=trimEnd){if(!done&&recorder.state!=="inactive")recorder.stop();return}raf=requestAnimationFrame(draw);};
+    const finish=()=>{if(!done&&recorder.state!=="inactive")recorder.stop();};
+    v.currentTime=trimStart;v.playbackRate=speed;v.addEventListener("ended",finish,{once:true});recorder.start(500);draw();
+    ac.resume().then(()=>v.play()).then(()=>{if(musicAudio)musicAudio.play().catch(()=>{});}).catch(e=>{if(!done){done=true;cleanup();reject(e);}});
+    setTimeout(finish,(Math.max(2,(trimEnd-trimStart)/Math.max(speed,.1))+4)*1000);
+  });
+}
+$("post").onclick=async()=>{if(!currentUser){location.replace("login.html");return}const post=$("post");post.disabled=true;post.textContent="Rendering…";try{const blob=editorMode==="photo"?await renderPhotoSlideshow():await renderEdited();if(!blob||blob.size===0)throw new Error("The edited video is empty. Please try again in Chrome.");status("Uploading the finished video…");const url=await cloudinaryUpload(blob,"video");const {data:videoRow,error}=await supabaseClient.from("videos").insert({user_id:currentUser.id,username:getUsername(),video_url:url,caption:$("caption").value.trim(),views:0}).select("id").single();if(error)throw error;let coverSaved=true;if(coverFile){try{const coverUrl=await cloudinaryUpload(coverFile,"image");const {error:coverError}=await supabaseClient.from("videos").update({cover_url:coverUrl}).eq("id",videoRow.id).eq("user_id",currentUser.id);if(coverError){coverSaved=false;console.warn("Cover uploaded but could not be saved in videos.cover_url:",coverError.message)}}catch(coverErr){coverSaved=false;console.warn(coverErr)}}status(coverSaved?"Posted successfully. Opening Glo-Tube…":"Video posted, but the cover could not be saved. Add a cover_url column to your videos table, then try again.");setTimeout(()=>location.replace("home.html"),coverSaved?700:2200)}catch(err){console.error(err);status("Could not post: "+(err.message||err));post.disabled=false;post.textContent="Render & Post"}};
+</script>
+</body>
+</html>
