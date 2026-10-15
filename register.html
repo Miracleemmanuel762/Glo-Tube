@@ -3,630 +3,439 @@
 
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="theme-color"
-    content="#080b14"
-  >
-
-  <meta
-    name="description"
-    content="Create your Glo-Tube account and join a community where creators share videos and connect."
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e60000">
 
   <title>Create Account | Glo-Tube</title>
 
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
+  <meta
+    name="description"
+    content="Create your Glo-Tube account and join the community."
   >
 
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --background: #080b14;
-      --card: #111624;
-      --input: #0b101c;
-      --border: #252d40;
-      --text: #ffffff;
-      --muted: #929bb0;
-      --blue: #3b9cff;
-      --blue-dark: #1877f2;
-      --success: #32d583;
-      --danger: #ff647c;
     }
 
     body {
+      margin: 0;
       min-height: 100vh;
-      font-family: 'Inter', sans-serif;
-      background:
-        radial-gradient(
-          circle at top left,
-          rgba(59, 156, 255, 0.12),
-          transparent 38%
-        ),
-        var(--background);
-      color: var(--text);
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
       display: flex;
       flex-direction: column;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    .navbar {
-      width: 100%;
-      padding: 22px 6%;
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      justify-content: center;
+      padding: 20px;
+      color: #222;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      background: #ffffff;
+      padding: 35px;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid #eeeeee;
     }
 
     .logo {
-      font-size: 25px;
+      text-align: center;
+      color: #e60000;
+      font-size: 30px;
       font-weight: 800;
+      margin-bottom: 8px;
       letter-spacing: -1px;
     }
 
-    .logo span {
-      color: var(--blue);
-    }
-
-    .nav-login {
-      color: #dce5f5;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .nav-login:hover {
-      color: var(--blue);
-    }
-
-    .main {
-      flex: 1;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 42px 18px;
-    }
-
-    .register-card {
-      width: 100%;
-      max-width: 440px;
-      padding: 34px 28px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
-    }
-
-    .brand-icon {
-      width: 58px;
-      height: 58px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0 auto 22px;
-      border-radius: 18px;
-      background: rgba(59, 156, 255, 0.12);
-      border: 1px solid rgba(59, 156, 255, 0.25);
-      color: var(--blue);
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    .heading {
+    .subtitle {
       text-align: center;
-      margin-bottom: 28px;
-    }
-
-    .heading h1 {
-      font-size: 27px;
-      line-height: 1.3;
-      font-weight: 800;
-      margin-bottom: 10px;
-      letter-spacing: -0.8px;
-    }
-
-    .heading p {
-      color: var(--muted);
+      color: #666666;
       font-size: 14px;
-      line-height: 1.7;
+      line-height: 1.6;
+      margin: 0 0 30px;
     }
 
     .form-group {
       margin-bottom: 19px;
     }
 
-    .form-group label {
+    label {
       display: block;
-      margin-bottom: 9px;
-      color: #e4eaf5;
-      font-size: 13px;
+      margin-bottom: 8px;
       font-weight: 600;
+      font-size: 14px;
+      color: #333333;
     }
 
-    .input-wrapper {
+    input {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #e60000;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      background: #ffffff;
+      color: #222222;
+      transition: box-shadow 0.2s;
+    }
+
+    input::placeholder {
+      color: #999999;
+    }
+
+    input:focus {
+      border-color: #cc0000;
+      box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.08);
+    }
+
+    .password-wrapper {
       position: relative;
     }
 
-    .form-group input {
-      width: 100%;
-      min-height: 49px;
-      padding: 13px 14px;
-      background: var(--input);
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      outline: none;
-      color: var(--text);
-      font-size: 14px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .form-group input::placeholder {
-      color: #69748b;
-    }
-
-    .form-group input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(59, 156, 255, 0.12);
-    }
-
-    .password-input {
-      padding-right: 74px !important;
+    .password-wrapper input {
+      padding-right: 65px;
     }
 
     .toggle-password {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
+      width: auto;
+      padding: 5px;
       background: transparent;
-      border: none;
-      color: var(--blue);
+      color: #e60000;
       font-size: 12px;
-      font-weight: 700;
+      border: none;
       cursor: pointer;
-      padding: 6px;
+    }
+
+    .toggle-password:hover {
+      background: transparent;
+      color: #b30000;
     }
 
     .password-hint {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.6;
+      font-size: 12px;
+      color: #777777;
+      margin: 7px 0 0;
+      line-height: 1.5;
     }
 
     .terms {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      margin: 22px 0;
-      color: var(--muted);
+      gap: 9px;
+      margin: 20px 0;
       font-size: 12px;
-      line-height: 1.7;
+      color: #555555;
+      line-height: 1.6;
     }
 
     .terms input {
-      flex-shrink: 0;
       width: 15px;
       height: 15px;
-      margin-top: 3px;
-      accent-color: var(--blue);
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: #e60000;
       cursor: pointer;
     }
 
+    .terms label {
+      margin: 0;
+      font-weight: normal;
+      font-size: 12px;
+    }
+
     .terms a {
-      color: var(--blue);
+      color: #e60000;
+      text-decoration: none;
+      font-weight: bold;
     }
 
     .terms a:hover {
       text-decoration: underline;
     }
 
-    .submit-button {
+    .register-button {
       width: 100%;
-      min-height: 51px;
       padding: 14px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      background: linear-gradient(
-        135deg,
-        var(--blue),
-        var(--blue-dark)
-      );
       border: none;
-      border-radius: 11px;
+      border-radius: 8px;
+      background: #e60000;
       color: #ffffff;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
+      transition: background 0.2s;
     }
 
-    .submit-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(24, 119, 242, 0.2);
+    .register-button:hover {
+      background: #cc0000;
     }
 
-    .submit-button:disabled {
+    .register-button:disabled {
       opacity: 0.65;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
     .message {
       display: none;
-      padding: 13px 14px;
-      margin-bottom: 20px;
-      border-radius: 10px;
-      font-size: 13px;
-      line-height: 1.7;
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
       overflow-wrap: anywhere;
-    }
-
-    .message.error {
-      display: block;
-      color: #ff9bab;
-      background: rgba(255, 100, 124, 0.09);
-      border: 1px solid rgba(255, 100, 124, 0.22);
     }
 
     .message.success {
       display: block;
-      color: #79eab0;
-      background: rgba(50, 213, 131, 0.08);
-      border: 1px solid rgba(50, 213, 131, 0.22);
+      color: #176b35;
+      background: #eaf8ee;
+      border: 1px solid #b8e6c5;
+    }
+
+    .message.error {
+      display: block;
+      color: #b00020;
+      background: #fff0f0;
+      border: 1px solid #ffcaca;
     }
 
     .message a {
-      color: #ffffff;
-      font-weight: 700;
-      text-decoration: underline;
+      color: #e60000;
+      font-weight: bold;
     }
 
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 24px 0;
-      color: #68738a;
-      font-size: 11px;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: "";
-      height: 1px;
-      flex: 1;
-      background: var(--border);
-    }
-
-    .login-text {
-      color: var(--muted);
+    .login {
       text-align: center;
-      font-size: 13px;
-      line-height: 1.8;
+      margin-top: 24px;
+      color: #666666;
+      font-size: 14px;
+      line-height: 1.7;
     }
 
-    .login-text a {
-      color: var(--blue);
-      font-weight: 700;
+    .login a {
+      color: #e60000;
+      font-weight: bold;
+      text-decoration: none;
     }
 
-    .login-text a:hover {
+    .login a:hover {
       text-decoration: underline;
     }
 
     .footer {
-      padding: 22px 15px;
+      margin-top: 22px;
+      color: #888888;
       text-align: center;
-      color: #68738a;
-      font-size: 11px;
-      line-height: 1.8;
+      font-size: 12px;
+      line-height: 1.7;
     }
 
-    .footer span {
-      color: var(--blue);
-      font-weight: 700;
-    }
-
-    .loading-spinner {
-      width: 15px;
-      height: 15px;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-top-color: #ffffff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: none;
-    }
-
-    .submit-button.loading .loading-spinner {
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+    .footer strong {
+      color: #e60000;
     }
 
     @media (max-width: 480px) {
 
-      .navbar {
-        padding: 20px;
+      body {
+        padding: 16px;
+      }
+
+      .container {
+        padding: 28px 22px;
       }
 
       .logo {
-        font-size: 23px;
-      }
-
-      .main {
-        padding: 28px 14px;
-        align-items: flex-start;
-      }
-
-      .register-card {
-        padding: 28px 20px;
-        border-radius: 18px;
-      }
-
-      .heading h1 {
-        font-size: 25px;
+        font-size: 28px;
       }
 
     }
 
   </style>
-
 </head>
 
 <body>
 
-  <header class="navbar">
+  <main class="container">
 
-    <a
-      href="https://glo-tube.vercel.app/"
-      class="logo"
-      aria-label="Glo-Tube Home"
-    >
-      Glo-<span>Tube</span>
-    </a>
+    <div class="logo">
+      Glo-Tube
+    </div>
 
-    <a
-      href="https://glo-tube.vercel.app/login.html"
-      class="nav-login"
-    >
-      Log in
-    </a>
-
-  </header>
+    <p class="subtitle">
+      Create your account and join the community.
+    </p>
 
 
-  <main class="main">
+    <form id="registerForm">
 
-    <section class="register-card">
+      <div class="form-group">
 
-      <div class="brand-icon">
-        G
+        <label for="username">
+          Username
+        </label>
+
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Choose a username"
+          minlength="3"
+          maxlength="30"
+          pattern="[A-Za-z0-9_]+"
+          title="Use letters, numbers, and underscores only."
+          autocomplete="username"
+          required
+        >
+
       </div>
 
-      <div class="heading">
 
-        <h1>Create your account</h1>
+      <div class="form-group">
 
-        <p>
-          Join Glo-Tube to share videos, discover creators,
-          and connect with a growing community.
+        <label for="email">
+          Email address
+        </label>
+
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="password">
+          Password
+        </label>
+
+        <div class="password-wrapper">
+
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Create a password"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          >
+
+          <button
+            type="button"
+            class="toggle-password"
+            data-target="password"
+          >
+            Show
+          </button>
+
+        </div>
+
+        <p class="password-hint">
+          Your password must contain at least 8 characters.
         </p>
 
       </div>
 
 
-      <div
-        id="message"
-        class="message"
-        role="status"
-        aria-live="polite"
-      ></div>
+      <div class="form-group">
 
-
-      <form id="registerForm">
-
-        <div class="form-group">
-
-          <label for="username">
-            Username
-          </label>
-
-          <input
-            type="text"
-            id="username"
-            name="username"
-            placeholder="Choose a username"
-            minlength="3"
-            maxlength="30"
-            pattern="[A-Za-z0-9_]+"
-            title="Use only letters, numbers, and underscores."
-            autocomplete="username"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="email">
-            Email address
-          </label>
-
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="password">
-            Password
-          </label>
-
-          <div class="input-wrapper">
-
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="password-input"
-              placeholder="Create a strong password"
-              minlength="8"
-              autocomplete="new-password"
-              required
-            >
-
-            <button
-              type="button"
-              class="toggle-password"
-              data-target="password"
-              aria-label="Show password"
-            >
-              Show
-            </button>
-
-          </div>
-
-          <p class="password-hint">
-            Use at least 8 characters. A mixture of letters,
-            numbers, and symbols is recommended.
-          </p>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="confirmPassword">
-            Confirm password
-          </label>
-
-          <div class="input-wrapper">
-
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              class="password-input"
-              placeholder="Enter your password again"
-              minlength="8"
-              autocomplete="new-password"
-              required
-            >
-
-            <button
-              type="button"
-              class="toggle-password"
-              data-target="confirmPassword"
-              aria-label="Show password confirmation"
-            >
-              Show
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <label class="terms">
-
-          <input
-            type="checkbox"
-            id="agreeTerms"
-            required
-          >
-
-          <span>
-            I agree to the Glo-Tube terms of service and
-            privacy policy.
-          </span>
-
+        <label for="confirmPassword">
+          Confirm password
         </label>
 
+        <div class="password-wrapper">
 
-        <button
-          type="submit"
-          class="submit-button"
-          id="registerButton"
-        >
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            placeholder="Enter your password again"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          >
 
-          <span class="loading-spinner"></span>
+          <button
+            type="button"
+            class="toggle-password"
+            data-target="confirmPassword"
+          >
+            Show
+          </button>
 
-          <span id="buttonText">
-            Create Account
-          </span>
+        </div>
 
-        </button>
-
-      </form>
-
-
-      <div class="divider">
-        ALREADY A MEMBER?
       </div>
 
 
-      <p class="login-text">
+      <div class="terms">
 
-        Already have a Glo-Tube account?
+        <input
+          type="checkbox"
+          id="agreeTerms"
+          required
+        >
 
-        <a href="https://glo-tube.vercel.app/login.html">
-          Log in
-        </a>
+        <label for="agreeTerms">
+          I agree to the Glo-Tube
+          <a href="https://glo-tube.vercel.app/terms.html">
+            Terms of Service
+          </a>
+          and
+          <a href="https://glo-tube.vercel.app/privacy.html">
+            Privacy Policy
+          </a>.
+        </label>
 
-      </p>
+      </div>
 
-    </section>
+
+      <button
+        type="submit"
+        class="register-button"
+        id="registerButton"
+      >
+        Create Account
+      </button>
+
+    </form>
+
+
+    <div
+      id="message"
+      class="message"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+
+    <div class="login">
+
+      Already have an account?
+
+      <a href="https://glo-tube.vercel.app/login.html">
+        Login
+      </a>
+
+    </div>
 
   </main>
 
@@ -635,96 +444,90 @@
 
     &copy; <span id="year"></span> Glo-Tube.
 
-    A video-sharing platform by
-    <span>GlobalMedia Development</span>.
+    Developed by <strong>GlobalMedia Development</strong>.
 
   </footer>
 
 
-  <!-- Supabase JavaScript library -->
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
   <script>
 
-    // ==========================================
-    // GLO-TUBE SUPABASE CONFIGURATION
-    // ==========================================
+    // =========================================
+    // SUPABASE CONFIGURATION
+    // =========================================
 
     const SUPABASE_URL =
       "https://iajjkzphwzkacibkrdhb.supabase.co";
 
-    /*
-      IMPORTANT:
-      Replace the placeholder below with your
-      existing Supabase publishable/anon key.
-
-      Never put your Supabase service_role key here.
-    */
-
     const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhamprenBod3prYWNpYmtyZGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2Mzg3MjgsImV4cCI6MjEwNzIxNDcyOH0.ATB6rsZCC7nkoIf7IL938POFTUEP-SIM6eyx6dNe9ZQ";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFub24iLCJpYXQiOjE3OTE2Mzg3MjgsImV4cCI6MjEwNzIxNDcyOH0.ATB6rsZCC7nkoIf7IL938POFTUEP-SIM6eyx6dNe9ZQ";
 
 
-    // ==========================================
+    // =========================================
     // INITIALIZE SUPABASE
-    // ==========================================
+    // =========================================
 
-    const supabaseConfigured =
-      window.supabase &&
-      SUPABASE_ANON_KEY !==
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhamprenBod3prYWNpYmtyZGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2Mzg3MjgsImV4cCI6MjEwNzIxNDcyOH0.ATB6rsZCC7nkoIf7IL938POFTUEP-SIM6eyx6dNe9ZQ" &&
-      SUPABASE_ANON_KEY.trim() !== "";
-
-    const supabaseClient = supabaseConfigured
-      ? window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_ANON_KEY
-        )
-      : null;
-
-
-    // ==========================================
-    // ELEMENTS
-    // ==========================================
-
-    const registerForm =
-      document.getElementById("registerForm");
-
-    const usernameInput =
-      document.getElementById("username");
-
-    const emailInput =
-      document.getElementById("email");
-
-    const passwordInput =
-      document.getElementById("password");
-
-    const confirmPasswordInput =
-      document.getElementById("confirmPassword");
-
-    const registerButton =
-      document.getElementById("registerButton");
-
-    const buttonText =
-      document.getElementById("buttonText");
+    let supabaseClient = null;
 
     const messageBox =
       document.getElementById("message");
 
+    const registerForm =
+      document.getElementById("registerForm");
 
-    // ==========================================
-    // FOOTER YEAR
-    // ==========================================
+    const registerButton =
+      document.getElementById("registerButton");
+
 
     document.getElementById("year").textContent =
       new Date().getFullYear();
 
 
-    // ==========================================
+    function showMessage(text, type) {
+
+      messageBox.className = "message " + type;
+
+      messageBox.textContent = text;
+
+    }
+
+
+    try {
+
+      if (
+        !window.supabase ||
+        !window.supabase.createClient
+      ) {
+
+        throw new Error(
+          "The Supabase library did not load. Check your internet connection."
+        );
+
+      }
+
+      supabaseClient =
+        window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_ANON_KEY
+        );
+
+    } catch (error) {
+
+      console.error(
+        "Supabase initialization error:",
+        error
+      );
+
+      showMessage(
+        error.message,
+        "error"
+      );
+
+    }
+
+
+    // =========================================
     // SHOW / HIDE PASSWORD
-    // ==========================================
+    // =========================================
 
     document
       .querySelectorAll(".toggle-password")
@@ -732,29 +535,19 @@
 
         button.addEventListener("click", function() {
 
-          const targetId =
-            button.getAttribute("data-target");
-
-          const input =
-            document.getElementById(targetId);
+          const input = document.getElementById(
+            button.dataset.target
+          );
 
           if (input.type === "password") {
 
             input.type = "text";
             button.textContent = "Hide";
-            button.setAttribute(
-              "aria-label",
-              "Hide password"
-            );
 
           } else {
 
             input.type = "password";
             button.textContent = "Show";
-            button.setAttribute(
-              "aria-label",
-              "Show password"
-            );
 
           }
 
@@ -763,79 +556,11 @@
       });
 
 
-    // ==========================================
-    // DISPLAY MESSAGES
-    // ==========================================
-
-    function showMessage(text, type) {
-
-      messageBox.className = "message " + type;
-
-      messageBox.replaceChildren(
-        document.createTextNode(text)
-      );
-
-      messageBox.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-      });
-
-    }
-
-
-    function showSuccessWithLoginLink() {
-
-      messageBox.className = "message success";
-
-      messageBox.replaceChildren(
-        document.createTextNode(
-          "Your account has been created. Please check your email and click the confirmation link before logging in. "
-        )
-      );
-
-      const loginLink =
-        document.createElement("a");
-
-      loginLink.href =
-        "https://glo-tube.vercel.app/login.html";
-
-      loginLink.textContent = "Go to login";
-
-      messageBox.appendChild(loginLink);
-
-      messageBox.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-      });
-
-    }
-
-
-    // ==========================================
-    // BUTTON LOADING STATE
-    // ==========================================
-
-    function setLoading(isLoading) {
-
-      registerButton.disabled = isLoading;
-
-      registerButton.classList.toggle(
-        "loading",
-        isLoading
-      );
-
-      buttonText.textContent = isLoading
-        ? "Creating account..."
-        : "Create Account";
-
-    }
-
-
-    // ==========================================
+    // =========================================
     // CHECK EXISTING SESSION
-    // ==========================================
+    // =========================================
 
-    async function checkExistingSession() {
+    async function checkSession() {
 
       if (!supabaseClient) {
         return;
@@ -849,10 +574,7 @@
         } = await supabaseClient.auth.getSession();
 
         if (error) {
-          console.error(
-            "Session check failed:",
-            error.message
-          );
+          console.error(error.message);
           return;
         }
 
@@ -867,7 +589,7 @@
       } catch (error) {
 
         console.error(
-          "Unable to check session:",
+          "Session error:",
           error
         );
 
@@ -875,12 +597,12 @@
 
     }
 
-    checkExistingSession();
+    checkSession();
 
 
-    // ==========================================
+    // =========================================
     // REGISTER ACCOUNT
-    // ==========================================
+    // =========================================
 
     registerForm.addEventListener(
       "submit",
@@ -888,13 +610,10 @@
 
         event.preventDefault();
 
-        messageBox.className = "message";
-        messageBox.textContent = "";
-
-        if (!supabaseConfigured) {
+        if (!supabaseClient) {
 
           showMessage(
-            "Supabase is not configured. Add your existing Supabase publishable/anon key to the code before registering.",
+            "Supabase is not connected. Refresh the page and try again.",
             "error"
           );
 
@@ -904,16 +623,20 @@
 
 
         const username =
-          usernameInput.value.trim();
+          document.getElementById("username")
+            .value.trim();
 
         const email =
-          emailInput.value.trim();
+          document.getElementById("email")
+            .value.trim();
 
         const password =
-          passwordInput.value;
+          document.getElementById("password")
+            .value;
 
         const confirmPassword =
-          confirmPasswordInput.value;
+          document.getElementById("confirmPassword")
+            .value;
 
 
         // Validate username.
@@ -921,34 +644,28 @@
         if (!/^[A-Za-z0-9_]{3,30}$/.test(username)) {
 
           showMessage(
-            "Your username must contain 3–30 characters and use only letters, numbers, and underscores.",
+            "Username must contain 3–30 letters, numbers, or underscores.",
             "error"
           );
-
-          usernameInput.focus();
 
           return;
 
         }
 
 
-        // Validate email.
+        // Validate matching passwords.
 
-        if (!emailInput.checkValidity()) {
+        if (password !== confirmPassword) {
 
           showMessage(
-            "Please enter a valid email address.",
+            "Your passwords do not match.",
             "error"
           );
-
-          emailInput.focus();
 
           return;
 
         }
 
-
-        // Validate password length.
 
         if (password.length < 8) {
 
@@ -957,58 +674,22 @@
             "error"
           );
 
-          passwordInput.focus();
-
           return;
 
         }
 
 
-        // Check matching passwords.
+        registerButton.disabled = true;
 
-        if (password !== confirmPassword) {
+        registerButton.textContent =
+          "Creating account...";
 
-          showMessage(
-            "Your passwords do not match. Please check them and try again.",
-            "error"
-          );
+        messageBox.className = "message";
 
-          confirmPasswordInput.focus();
-
-          return;
-
-        }
-
-
-        // Require acceptance of terms.
-
-        if (
-          !document.getElementById("agreeTerms").checked
-        ) {
-
-          showMessage(
-            "Please agree to the terms before creating your account.",
-            "error"
-          );
-
-          return;
-
-        }
-
-
-        setLoading(true);
+        messageBox.textContent = "";
 
 
         try {
-
-          /*
-            SUPABASE SIGNUP
-
-            Supabase sends the confirmation email.
-            The email-confirmation.html page must
-            not be treated as proof of verification
-            unless Supabase has verified the token.
-          */
 
           const {
             data,
@@ -1035,69 +716,30 @@
 
           if (error) {
 
-                        console.error(
-              "Registration error:",
+            console.error(
+              "Supabase signup error:",
               error
             );
 
-            const errorMessage =
-              error.message || "";
-
-            if (
-              errorMessage.toLowerCase().includes(
-                "already registered"
-              ) ||
-              errorMessage.toLowerCase().includes(
-                "already exists"
-              )
-            ) {
-
-              showMessage(
-                "An account may already exist with this email. Try logging in or use another email address.",
-                "error"
-              );
-
-            } else if (
-              errorMessage.toLowerCase().includes(
-                "password"
-              )
-            ) {
-
-              showMessage(
-                "Your password was rejected. Please use a stronger password and try again.",
-                "error"
-              );
-
-            } else if (
-              errorMessage.toLowerCase().includes(
-                "rate limit"
-              )
-            ) {
-
-              showMessage(
-                "Too many registration or email requests. Please wait before trying again.",
-                "error"
-              );
-
-            } else {
-
-              showMessage(
-                "We could not create your account: " +
-                errorMessage,
-                "error"
-              );
-
-            }
+            showMessage(
+              error.message,
+              "error"
+            );
 
             return;
 
           }
 
 
-          // If Supabase returns an active session,
-          // redirect the user to the home page.
+          // If a session exists, registration is complete
+          // and Supabase has authenticated the user.
 
           if (data.session) {
+
+            showMessage(
+              "Account created successfully! Redirecting to Glo-Tube...",
+              "success"
+            );
 
             window.location.replace(
               "https://glo-tube.vercel.app/home.html"
@@ -1108,9 +750,14 @@
           }
 
 
-          // Account created; email confirmation is required.
+          // No session generally means email confirmation
+          // is required. Do not falsely claim verification.
 
-          showSuccessWithLoginLink();
+          showMessage(
+            "Your registration was successful! Please check your email and click the confirmation link to activate your Glo-Tube account.",
+            "success"
+          );
+
 
           registerForm.reset();
 
@@ -1123,13 +770,16 @@
           );
 
           showMessage(
-            "Something went wrong while creating your account. Check your internet connection and try again.",
+            "Unable to connect to Supabase. Check your internet connection and try again.",
             "error"
           );
 
         } finally {
 
-          setLoading(false);
+          registerButton.disabled = false;
+
+          registerButton.textContent =
+            "Create Account";
 
         }
 
@@ -1140,4 +790,4 @@
 
 </body>
 
-</html>
+  </html>
