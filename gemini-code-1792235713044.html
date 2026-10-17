@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Glo-Tube — Create Video</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}button,input,textarea{font:inherit}.page{max-width:720px;margin:auto;padding:18px 16px 110px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{font-size:23px;font-weight:800}.brand span{color:#3b9cff}.back{color:#fff;text-decoration:none;background:#171717;border:1px solid #2a2a2a;border-radius:12px;padding:9px 12px}.picker{border:1px dashed #555;border-radius:18px;padding:28px;text-align:center;background:#111}.picker input{width:100%;margin-top:14px}.preview-wrap{display:none;margin-top:16px;background:#000;border-radius:18px;overflow:hidden;position:relative}.preview-wrap video{display:block;width:100%;max-height:62vh;object-fit:contain;background:#000}.tools{display:none;margin-top:16px;background:#111;border:1px solid #242424;border-radius:18px;padding:15px}.tool-title{font-weight:800;margin:0 0 10px}.row{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.tool{flex:0 0 auto;border:1px solid #333;background:#181818;color:#fff;border-radius:12px;padding:10px 13px}.tool.active{border-color:#3b9cff;background:#10243a}.field{margin-top:15px}.field label{display:block;font-size:13px;color:#aaa;margin-bottom:7px}.range{width:100%}textarea{width:100%;min-height:90px;background:#171717;color:#fff;border:1px solid #333;border-radius:12px;padding:12px;resize:vertical}.actions{display:none;margin-top:16px;gap:10px}.primary,.secondary{border:0;border-radius:13px;padding:13px 16px;font-weight:800}.primary{background:#3b9cff;color:#fff;flex:1}.secondary{background:#222;color:#fff}.status{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#121212;color:#bbb;font-size:14px;line-height:1.45}.music-name{font-size:12px;color:#aaa;margin-top:7px}.hidden{display:none!important}@media(min-width:600px){.preview-wrap video{max-height:68vh}}
+</style>
+</head>
+<body>
+<main class="page">
+<header class="top"><div class="brand">Glo-<span>Tube</span></div><a class="back" href="home.html">Cancel</a></header>
+<section class="picker" id="picker"><h2>Choose a video</h2><p style="color:#aaa">Select a video from your phone, then preview your edits before posting. Your original file is never overwritten.</p><input id="videoFile" type="file" accept="video/*"></section>
+<section class="preview-wrap" id="previewWrap"><video id="preview" playsinline controls></video></section>
+<section class="tools" id="tools">
+<h3 class="tool-title">Effects</h3>
+<div class="row" id="filters">
+<button class="tool active" data-filter="none">Normal</button><button class="tool" data-filter="brightness">Bright</button><button class="tool" data-filter="contrast">Contrast</button><button class="tool" data-filter="saturate">Vivid</button><button class="tool" data-filter="grayscale">B&W</button><button class="tool" data-filter="sepia">Warm</button>
+</div>
+<div class="field"><label>Speed</label><div class="row" id="speeds"><button class="tool active" data-speed="1">1×</button><button class="tool" data-speed="0.5">0.5×</button><button class="tool" data-speed="1.5">1.5×</button><button class="tool" data-speed="2">2×</button></div></div>
+<div class="field"><label>Original sound</label><input class="range" id="videoVolume" type="range" min="0" max="1" step="0.05" value="1"></div>
+<div class="field"><label>Background sound</label><input id="audioFile" type="file" accept="audio/*"><div class="music-name" id="musicName">No background sound selected.</div></div>
+<div class="field"><label>Background sound volume</label><input class="range" id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.6"></div>
+<div class="field"><label>Caption</label><textarea id="caption" maxlength="1000" placeholder="Write a caption..."></textarea></div>
+</section>
+<div class="actions" id="actions"><button class="secondary" id="reset" type="button">Reset</button><button class="primary" id="post" type="button">Render &amp; Post</button></div>
+<div class="status" id="status"></div>
+</main>
+<script>
+"use strict";
+
+const CLOUDINARY_CLOUD = "dg9qaek0h";
+const CLOUDINARY_PRESET = "glotube_uploads";
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let videoURL = "";
+let audioURL = "";
+let filterName = "none";
+let speed = 1;
+let audioFile = null;
+let selectedVideoFile = null;
+let isPosting = false;
+
+const filterMap = {
+  none: "none",
+  brightness: "brightness(1.25)",
+  contrast: "contrast(1.3)",
+  saturate: "saturate(1.7)",
+  grayscale: "grayscale(1)",
+  sepia: "sepia(.75)"
+};
+
+function status(message, show = true) {
+  $("status").style.display = show ? "block" : "none";
+  $("status").textContent = message;
+}
+
+async function boot() {
+  try {
+    if (!window.supabaseClient) throw new Error("Supabase did not load. Please refresh the page.");
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+    currentUser = data.session?.user || null;
+    if (!currentUser) location.replace("login.html");
+  } catch (err) {
+    status("Could not verify your login: " + (err.message || err));
+  }
+}
+boot();
+
+$("videoFile").addEventListener("change", async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("video/")) {
+    status("Please choose a video file.");
+    event.target.value = "";
+    return;
+  }
+
+  if (videoURL) URL.revokeObjectURL(videoURL);
+  selectedVideoFile = file;
+  videoURL = URL.createObjectURL(file);
+
+  const video = $("preview");
+  video.pause();
+  video.removeAttribute("src");
+  video.src = videoURL;
+  video.style.filter = "none";
+  video.playbackRate = 1;
+  video.volume = 1;
+  filterName = "none";
+  speed = 1;
+  $("videoVolume").value = "1";
+  $("musicVolume").value = "0.6";
+  document.querySelectorAll("#filters .tool").forEach(button => button.classList.toggle("active", button.dataset.filter === "none"));
+  document.querySelectorAll("#speeds .tool").forEach(button => button.classList.toggle("active", button.dataset.speed === "1"));
+  $("previewWrap").style.display = "block";
+  $("tools").style.display = "block";
+  $("actions").style.display = "flex";
+  status("Video loaded. Preview your edits before posting.");
+
+  try {
+    await new Promise((resolve, reject) => {
+      if (video.readyState >= 1) return resolve();
+      video.addEventListener("loadedmetadata", resolve, { once: true });
+      video.addEventListener("error", () => reject(new Error("This video could not be opened by your browser.")), { once: true });
+      video.load();
+    });
+  } catch (err) {
+    status(err.message);
+  }
+});
+
+$("filters").addEventListener("click", event => {
+  const button = event.target.closest("button[data-filter]");
+  if (!button) return;
+  document.querySelectorAll("#filters .tool").forEach(item => item.classList.remove("active"));
+  button.classList.add("active");
+  filterName = button.dataset.filter;
+  $("preview").style.filter = filterMap[filterName] || "none";
+});
+
+$("speeds").addEventListener("click", event => {
+  const button = event.target.closest("button[data-speed]");
+  if (!button) return;
+  document.querySelectorAll("#speeds .tool").forEach(item => item.classList.remove("active"));
+  button.classList.add("active");
+  speed = Number(button.dataset.speed);
+  $("preview").playbackRate = speed;
+});
+
+$("videoVolume").addEventListener("input", event => {
+  $("preview").volume = Number(event.target.value);
+});
+
+$("audioFile").addEventListener("change", event => {
+  audioFile = event.target.files?.[0] || null;
+  if (audioURL) URL.revokeObjectURL(audioURL);
+  audioURL = audioFile ? URL.createObjectURL(audioFile) : "";
+  $("musicName").textContent = audioFile ? audioFile.name : "No background sound selected.";
+});
+
+$("reset").addEventListener("click", () => {
+  filterName = "none";
+  speed = 1;
+  $("preview").style.filter = "none";
+  $("preview").playbackRate = 1;
+  $("preview").volume = 1;
+  $("videoVolume").value = "1";
+  $("musicVolume").value = "0.6";
+  document.querySelectorAll(".tool").forEach(item => item.classList.remove("active"));
+  document.querySelector('#filters [data-filter="none"]').classList.add("active");
+  document.querySelector('#speeds [data-speed="1"]').classList.add("active");
+  status("Edits reset. Your selected original video has not been changed.");
+});
+
+function getUsername() {
+  return currentUser?.user_metadata?.username || currentUser?.email?.split("@")[0] || "User";
+}
+
+async function cloudinaryUpload(blob, resource = "video", filename = "glotube-video") {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  form.append("upload_preset", CLOUDINARY_PRESET);
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resource}/upload`, {
+    method: "POST",
+    body: form
+  });
+
+  let result;
+  try { result = await response.json(); }
+  catch { throw new Error("Cloudinary returned an unreadable response."); }
+
+  if (!response.ok || !result.secure_url) {
+    throw new Error(result.error?.message || "Cloudinary upload failed.");
+  }
+  return result;
+}
+
+async function renderEdited() {
+  const video = $("preview");
+  if (!selectedVideoFile || !videoURL) throw new Error("Please choose a video first.");
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+    throw new Error("This browser cannot safely render edits. You can still upload the original video by resetting all edits.");
+  }
+
+  if (!Number.isFinite(video.duration) || video.duration <= 0 || !video.videoWidth || !video.videoHeight) {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("The video did not finish loading. Please try selecting it again.")), 15000);
+      video.addEventListener("loadedmetadata", () => { clearTimeout(timer); resolve(); }, { once: true });
+      video.addEventListener("error", () => { clearTimeout(timer); reject(new Error("The selected video cannot be read.")); }, { once: true });
+      video.load();
+    });
+  }
+
+  const originalTime = video.currentTime || 0;
+  const originalRate = video.playbackRate;
+  const originalVolume = video.volume;
+  const wasMuted = video.muted;
+  const width = video.videoWidth;
+  const height = video.videoHeight;
+  const maxDimension = 1280;
+  const scale = Math.min(1, maxDimension / Math.max(width, height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(2, Math.round(width * scale / 2) * 2);
+  canvas.height = Math.max(2, Math.round(height * scale / 2) * 2);
+  const context = canvas.getContext("2d", { alpha: false });
+  if (!context) throw new Error("Could not prepare the video renderer.");
+
+  const mimeCandidates = [
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4",
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm"
+  ];
+  const mimeType = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type));
+  if (!mimeType) throw new Error("This browser does not support a compatible video export. Please upload the original without edits.");
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  let audioContext = null;
+  let originalSource = null;
+  let musicElement = null;
+  let musicSource = null;
+  let recorder = null;
+  let canvasStream = null;
+  let mixedStream = null;
+  let animationFrame = 0;
+  let settled = false;
+  const chunks = [];
+
+  const cleanup = async () => {
+    cancelAnimationFrame(animationFrame);
+    video.pause();
+    if (musicElement) {
+      musicElement.pause();
+      musicElement.removeAttribute("src");
+      musicElement.load();
+    }
+    for (const stream of [canvasStream, mixedStream]) {
+      stream?.getTracks().forEach(track => { try { track.stop(); } catch {} });
+    }
+    video.playbackRate = originalRate;
+    video.volume = originalVolume;
+    video.muted = wasMuted;
+    video.style.filter = filterMap[filterName] || "none";
+    try { video.currentTime = Math.min(originalTime, video.duration || originalTime); } catch {}
+    if (audioContext && audioContext.state !== "closed") {
+      try { await audioContext.close(); } catch {}
+    }
+  };
+
+  return new Promise(async (resolve, reject) => {
+    const fail = async error => {
+      if (settled) return;
+      settled = true;
+      await cleanup();
+      reject(error instanceof Error ? error : new Error("Video rendering failed."));
+    };
+    const succeed = async blob => {
+      if (settled) return;
+      settled = true;
+      await cleanup();
+      if (!blob || !blob.size) {
+        reject(new Error("The browser exported an empty video. Your original file is still safe; try again without edits."));
+        return;
+      }
+      resolve(blob);
+    };
+
+    try {
+      video.pause();
+      video.playbackRate = speed;
+      video.volume = 1;
+      video.muted = false;
+      video.style.filter = "none";
+      if (video.currentTime !== 0) {
+        await new Promise((resolveSeek, rejectSeek) => {
+          const timer = setTimeout(() => rejectSeek(new Error("Could not seek to the start of the video.")), 8000);
+          video.addEventListener("seeked", () => { clearTimeout(timer); resolveSeek(); }, { once: true });
+          video.currentTime = 0;
+        });
+      }
+
+      mixedStream = null;
+      let audioDestination = null;
+      if (!AudioContextClass) {
+        throw new Error("This browser cannot safely preserve audio while rendering.");
+      }
+      {
+        audioContext = new AudioContextClass();
+        await audioContext.resume();
+        audioDestination = audioContext.createMediaStreamDestination();
+        originalSource = audioContext.createMediaElementSource(video);
+        const originalGain = audioContext.createGain();
+        originalGain.gain.value = Number($("videoVolume").value);
+        originalSource.connect(originalGain);
+        originalGain.connect(audioDestination);
+        originalGain.connect(audioContext.destination);
+
+        if (audioURL) {
+          musicElement = new Audio();
+          musicElement.src = audioURL;
+          musicElement.preload = "auto";
+          musicElement.loop = true;
+          await new Promise((resolveAudio, rejectAudio) => {
+            if (musicElement.readyState >= 2) return resolveAudio();
+            musicElement.addEventListener("canplay", resolveAudio, { once: true });
+            musicElement.addEventListener("error", () => rejectAudio(new Error("The background audio file could not be loaded.")), { once: true });
+            musicElement.load();
+          });
+          musicSource = audioContext.createMediaElementSource(musicElement);
+          const musicGain = audioContext.createGain();
+          musicGain.gain.value = Number($("musicVolume").value);
+          musicSource.connect(musicGain);
+          musicGain.connect(audioDestination);
+          musicGain.connect(audioContext.destination);
+        }
+      }
+
+      // OPTIMIZATION: Captured at 24 FPS to maintain smooth timestamp/frame rate handling on mobile devices
+      canvasStream = canvas.captureStream(24);
+      const videoTracks = canvasStream.getVideoTracks();
+      if (!videoTracks.length) throw new Error("Could not capture video frames.");
+      const audioTracks = audioDestination?.stream.getAudioTracks() || [];
+      mixedStream = new MediaStream([...videoTracks, ...audioTracks]);
+      
+      // OPTIMIZATION: Reduced video bitrate to lower encoding overhead and prevent freezing
+      recorder = new MediaRecorder(mixedStream, { mimeType, videoBitsPerSecond: 2500000 });
+      
+      recorder.ondataavailable = event => {
+        if (event.data?.size) chunks.push(event.data);
+      };
+      recorder.onerror = event => { fail(event.error || new Error("The browser failed while rendering the video.")); };
+      recorder.onstop = () => {
+        const actualType = recorder.mimeType || mimeType;
+        succeed(new Blob(chunks, { type: actualType }));
+      };
+
+      const drawFrame = () => {
+        if (settled || recorder?.state !== "recording") return;
+        try {
+          context.filter = filterMap[filterName] || "none";
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          context.filter = "none";
+        } catch (error) {
+          fail(new Error("Could not render a video frame: " + error.message));
+          return;
+        }
+        animationFrame = requestAnimationFrame(drawFrame);
+      };
+
+      const finishRecording = () => {
+        if (settled || !recorder || recorder.state === "inactive") return;
+        cancelAnimationFrame(animationFrame);
+        try { recorder.requestData(); } catch {}
+        setTimeout(() => {
+          if (!settled && recorder && recorder.state !== "inactive") {
+            try { recorder.stop(); } catch (error) { fail(error); }
+          }
+        }, 150);
+      };
+
+      video.addEventListener("ended", finishRecording, { once: true });
+      video.addEventListener("error", () => fail(new Error("The video encountered an error during rendering.")), { once: true });
+      recorder.start(1000);
+      drawFrame();
+
+      const playPromise = video.play();
+      if (musicElement) {
+        musicElement.currentTime = 0;
+        musicElement.play().catch(() => {});
+      }
+      await playPromise;
+
+      const expectedMs = (video.duration / speed) * 1000;
+      setTimeout(() => {
+        if (!settled && recorder && recorder.state !== "inactive") {
+          if (video.ended || video.currentTime >= video.duration - 0.15) finishRecording();
+          else fail(new Error("Rendering took too long and was stopped to protect the original video. Please try a shorter clip."));
+        }
+      }, Math.min(expectedMs + 12000, 30 * 60 * 1000));
+    } catch (error) {
+      await fail(error);
+    }
+  });
+}
+
+function cloudinaryMp4DeliveryUrl(url) {
+  if (!url || !url.includes("/upload/")) return url;
+  return url.replace("/upload/", "/upload/f_mp4/");
+}
+
+$("post").addEventListener("click", async () => {
+  if (isPosting) return;
+  if (!currentUser) {
+    location.replace("login.html");
+    return;
+  }
+  if (!selectedVideoFile) {
+    status("Please choose a video first.");
+    return;
+  }
+
+  isPosting = true;
+  const postButton = $("post");
+  postButton.disabled = true;
+  $("reset").disabled = true;
+  $("videoFile").disabled = true;
+  $("audioFile").disabled = true;
+
+  try {
+    const needsRendering =
+      filterName !== "none" ||
+      speed !== 1 ||
+      !!audioFile ||
+      Number($("videoVolume").value) !== 1;
+
+    let uploadBlob = selectedVideoFile;
+    let filename = selectedVideoFile.name || "glotube-video";
+
+    if (needsRendering) {
+      postButton.textContent = "Rendering…";
+      status("Rendering your edits into a new copy. Do not close this page. Your original phone video will not be changed.");
+      uploadBlob = await renderEdited();
+      const isMp4 = uploadBlob.type.includes("mp4");
+      filename = isMp4 ? "glotube-edited.mp4" : "glotube-edited.webm";
+    } else {
+      status("No rendering edits selected. Uploading your original video without re-encoding it.");
+    }
+
+    postButton.textContent = "Uploading…";
+    status("Uploading video to Cloudinary…");
+    const uploaded = await cloudinaryUpload(uploadBlob, "video", filename);
+
+    // OPTIMIZATION: Always force MP4 delivery format conversion on rendered outputs for browser playback safety
+    let playbackUrl = uploaded.secure_url;
+    if (needsRendering) {
+      playbackUrl = cloudinaryMp4DeliveryUrl(playbackUrl);
+    }
+
+    status("Saving your video to Glo-Tube…");
+    const { error } = await supabaseClient.from("videos").insert({
+      user_id: currentUser.id,
+      username: getUsername(),
+      video_url: playbackUrl,
+      caption: $("caption").value.trim(),
+      views: 0
+    });
+    if (error) throw error;
+
+    status("Posted successfully. Opening Glo-Tube…");
+    setTimeout(() => location.replace("home.html"), 900);
+  } catch (error) {
+    console.error("Glo-Tube video post error:", error);
+    status("Could not post: " + (error.message || error) + " Your original video has not been modified. You can reset edits and post the original.");
+    isPosting = false;
+    postButton.disabled = false;
+    $("reset").disabled = false;
+    $("videoFile").disabled = false;
+    $("audioFile").disabled = false;
+    postButton.textContent = "Render & Post";
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  if (videoURL) URL.revokeObjectURL(videoURL);
+  if (audioURL) URL.revokeObjectURL(audioURL);
+});
+</script>
+</body>
+</html>
